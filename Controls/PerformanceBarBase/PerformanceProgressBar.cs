@@ -11,7 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Data;
 
-namespace Where.Common.Controls.PerformanceBarBase
+namespace Where.Controls
 {
     /// <summary>
     /// A progress bar implementation for a smoother appearance of the 

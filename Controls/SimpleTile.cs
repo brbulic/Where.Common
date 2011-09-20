@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace Where.Common.Controls
+namespace Where.Controls
 {
     public class SimpleTile : ContentControl
     {

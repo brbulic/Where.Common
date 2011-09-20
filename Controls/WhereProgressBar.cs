@@ -1,9 +1,7 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
-using Where.Common.Controls.PerformanceBarBase;
 
-namespace Where.Common.Controls
+namespace Where.Controls
 {
 	public sealed class WhereProgressBar : PerformanceProgressBar
 	{

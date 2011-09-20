@@ -28,7 +28,7 @@ using System.Windows.Media.Animation;
 // progress bar control. It should not be used elsewhere.
 //
 
-namespace Where.Common.Controls.PerformanceBarBase
+namespace Where.Controls
 {
     /// <summary>
     /// A very specialized primitive control that works around a specific visual
