@@ -12,10 +12,7 @@ namespace Where.Framework.Support
 		{
 			get
 			{
-				object obj;
-				if (DeviceExtendedProperties.TryGetValue("DeviceManufacturer", out obj))
-					return (string)obj;
-				return "Unknown";
+				return DeviceStatus.DeviceManufacturer;
 			}
 		}
 
@@ -33,10 +30,7 @@ namespace Where.Framework.Support
 		{
 			get
 			{
-				object obj;
-				if (DeviceExtendedProperties.TryGetValue("DeviceName", out obj))
-					return (string)obj;
-				return "Unknown";
+				return DeviceStatus.DeviceName;
 			}
 		}
 
@@ -44,10 +38,7 @@ namespace Where.Framework.Support
 		{
 			get
 			{
-				object obj;
-				if (DeviceExtendedProperties.TryGetValue("DeviceHardwareVersion", out obj))
-					return (string)obj;
-				return "Unknown";
+				return DeviceStatus.DeviceHardwareVersion;
 			}
 		}
 
@@ -55,10 +46,7 @@ namespace Where.Framework.Support
 		{
 			get
 			{
-				object obj;
-				if (DeviceExtendedProperties.TryGetValue("DeviceFirmwareVersion", out obj))
-					return (string)obj;
-				return "Unknown";
+				return DeviceStatus.DeviceFirmwareVersion;
 			}
 		}
 
@@ -66,20 +54,17 @@ namespace Where.Framework.Support
 		{
 			get
 			{
-				var asmbly = Assembly.GetCallingAssembly();
-				var sFullName = asmbly.FullName;
-				return sFullName.Substring(0, sFullName.IndexOf(", Culture"));
-
+				var asmbly = Assembly.GetCallingAssembly().FullName;
+				var sFullName = new AssemblyName(asmbly);
+				var version = sFullName.Version;
+				return version.ToString();
 			}
 		}
 
-		public static long DeviceTotalMemory {
+		public static double DeviceTotalMemory
+		{
+			get { return DeviceStatus.DeviceTotalMemory; }
 
-			get
-			{
-				var totalMemory = GC.GetTotalMemory(true);
-				return totalMemory;
-			}
 		}
 	}
 }

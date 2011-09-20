@@ -95,15 +95,6 @@ namespace Where.Common.Mvvm
 
 
 
-		private NavigationMode _currentPageNavigationMode = NavigationMode.Refresh;
-
-		protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
-		{
-			base.OnNavigatingFrom(e);
-			_currentPageNavigationMode = e.NavigationMode;
-		}
-
-
 
 		protected override void OnNavigatedFrom(NavigationEventArgs e)
 		{
@@ -111,10 +102,10 @@ namespace Where.Common.Mvvm
 
 			if (PageViewModel != null)
 			{
-				if (_currentPageNavigationMode == NavigationMode.New)
+				if (e.NavigationMode == NavigationMode.New)
 					PageViewModel.SaveToTombstone(this);
 
-				if (_currentPageNavigationMode == NavigationMode.Back)
+				if (e.NavigationMode == NavigationMode.Back)
 				{
 					this.RemoveAllKeysFromPage();
 					PageViewModel.Cleanup();
