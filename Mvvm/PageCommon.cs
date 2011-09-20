@@ -92,10 +92,7 @@ namespace Where.Common.Mvvm
 
 			GC.Collect();
 		}
-
-
-
-
+		
 		protected override void OnNavigatedFrom(NavigationEventArgs e)
 		{
 			base.OnNavigatedFrom(e);
