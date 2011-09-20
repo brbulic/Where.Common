@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Windows;
 using Where.Common.Services.Interfaces;
 
@@ -10,22 +9,36 @@ namespace Where.Api
 {
 	public delegate void DataLoadedCallback(bool error, Object o);
 
+	/// <summary>
+	/// Base handler for API operations.
+	/// </summary>
 	public abstract class ApiBase
 	{
 		//Windows Phone 7 keycode
 		public const String WhereWp7Keycode = "b86d118b-bb0a-4b1d-8591-295a0af80cbd";
 
+		/// <summary>
+		/// Default request type
+		/// </summary>
 		protected RequestType ApiRequestType = RequestType.Get;
 
+		/// <summary>
+		/// For internal use. If true, returns on dispatcher. Else returns on the thread calling the callback.
+		/// </summary>
 		protected bool MarshallOnUiThread { get; set; }
 
+		/// <summary>
+		/// Current web request backend.
+		/// </summary>
 		private static readonly IWebService WebRequestDispatcher = Utils.ConcurrentWebService;
 
+		/// <summary>
+		/// Handles queued callbacks for requests
+		/// </summary>
 		private readonly IDictionary<Guid, DataLoadedCallback> _concurrentRequests = new Dictionary<Guid, DataLoadedCallback>();
 
 		protected ApiBase()
 		{
-			ApiRequestType = RequestType.Get;
 			MarshallOnUiThread = true;
 		}
 
@@ -47,6 +60,12 @@ namespace Where.Api
 			return null;
 		}
 
+		/// <summary>
+		/// Call this to signal operation done for a GUID. Returns a callback on the UI thread if Get request.
+		/// </summary>
+		/// <param name="guid">Request GUID</param>
+		/// <param name="isError">Returns true if error.</param>
+		/// <param name="userState">User's state data can be found here.</param>
 		public void CallDataLoadedCallback(Guid guid, bool isError, object userState)
 		{
 			DataLoadedCallback callback;
@@ -65,18 +84,12 @@ namespace Where.Api
 			{
 				callback(isError, userState);
 			}
-
-
 		}
 
-		//private WebClient CreateWebClient()
-		//{
-		//    var wc = new WebClient();
-		//    wc.Headers["user-agent"] = "Mozilla/4.0 (compatible; MSIE 7.0; Windows Phone OS 7.0; Trident/3.1; IEMobile/7.0; HTC; HD7)";
-		//    wc.DownloadStringCompleted += ClientDownloadStringCompleted;
-		//    return wc;
-		//}
-
+		/// <summary>
+		/// Unused
+		/// </summary>
+		internal const string ReferenceUserAgent = "Mozilla/4.0 (compatible; MSIE 7.0; Windows Phone OS 7.0; Trident/3.1; IEMobile/7.0; HTC; HD7)";
 
 		/// <summary>
 		/// Cancel all requests of the current instance (clear callbacks)
@@ -111,12 +124,19 @@ namespace Where.Api
 			}
 		}
 
+
+		/// <summary>
+		/// Overriding classes call this method to initiate a request.
+		/// </summary>
+		/// <param name="url">Caller URL</param>
+		/// <param name="parameters">Caller parameters</param>
+		/// <param name="callback">Returns on response</param>
+		/// <param name="userObject">UserState, if needed</param>
 		protected void CallApi(String url, IDictionary<string, string> parameters, DataLoadedCallback callback, object userObject = null)
 		{
 			Guid guid;
 
-			if (callback == null)
-				throw new ArgumentNullException("callback", @"Callback for an ApiOperation MUST EXIST!");
+			Utils.NotNullArgument(callback, "callback", @"Callback for an ApiOperation MUST EXIST!");
 
 			switch (ApiRequestType)
 			{
@@ -138,10 +158,16 @@ namespace Where.Api
 
 		private void OnOperationCompleted(Guid guid, WebServiceEventArgs args)
 		{
-			var result = new ApiResult(args.UserState, args.Exception, args.IsHandled, args.ResponseString);
+			var result = new ApiResult(args.UserState, args.Exception, args.ResponseStatus, args.ResponseString);
 			ApiCallCompleted(guid, result);
 		}
 
+
+		/// <summary>
+		/// The web response is recieved here. So, override this method to get the response and do what you want.
+		/// </summary>
+		/// <param name="guid">Guid of a certain request</param>
+		/// <param name="e">Result</param>
 		public abstract void ApiCallCompleted(Guid guid, ApiResult e);
 
 		~ApiBase()
