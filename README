@@ -1,0 +1,27 @@
+Where.Common
+------------------------
+
+Contains all the standard utilities et al. to help Windows Phone Development:
+
+There are 2 branches
+-----------------------
+- master (bleeding edge, compatible with Windows Phone 7.0 only)
+- wp71 (Windows Phone 7.1 version of the master, with specifics for Windows Phone 7)
+
+
+Depends on:
+----------------------
+- JSON.NET library found here: http://json.codeplex.com/ . Currently, you need to add it manually before I figure out how to automatically add it
+
+
+Utilities:
+----------------------
+The commonly used Utilities are found in the Utils static class, which include
+
+= Services:
+	- IBackgroundDispatcher: run Action and Action<object> delegates on a background thread.
+	- ICacheService: cache Json serializable objects to the IsolatedStorage by key. You must implement IWhereCacheable for it to work
+	- IWebService: enqueue get and post operations, currently 2 implemenetations - DoubleRequestService and ConcurrentWebService
+	- ISuperintendent: Data controller with Message support
+	- IMessage: Embedded Message service (thanks to Laurent Bugnion from Galasoft)
+	- MVVM implementation: PageCommon and PageViewModel implementations of the Model-View-Viewmodel .NET pattern for Windows Phone 7/7.1.
