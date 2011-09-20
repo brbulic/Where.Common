@@ -149,7 +149,6 @@ namespace Where.Common.DataController
 
 
 		private object _getAccessorHandle = new object();
-
 		
 		private SuperindententDataObject<TE> GrabFromJson<TE>(string propertyName)
 		{

@@ -71,6 +71,12 @@ namespace Where.Common.Mvvm
 				switch (AppState.GetCurrentAppState)
 				{
 					case CurrentAppState.None:
+						var includesPreviousState = this.ContainsStateElementsForPage();
+						if (includesPreviousState)
+						{
+							_isTombstone = true;
+							PageViewModel.LoadFromTombstone(this);
+						}
 						break;
 					case CurrentAppState.Starting:
 						Application.Current.SetCurrentAppState(CurrentAppState.None);
@@ -93,6 +99,9 @@ namespace Where.Common.Mvvm
 			GC.Collect();
 		}
 		
+
+
+
 		protected override void OnNavigatedFrom(NavigationEventArgs e)
 		{
 			base.OnNavigatedFrom(e);

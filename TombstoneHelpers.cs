@@ -140,6 +140,13 @@ namespace Where
 			}
 		}
 
+		public static bool ContainsStateElementsForPage(this PhoneApplicationPage page)
+		{
+			var pageNameWithPrefix = page.GetType().Name + "_";
+			var hasAny = SavedObjects.Any(value => value.Key.StartsWith(pageNameWithPrefix));
+			return hasAny;
+		}
+
 		public static T RestoreObjectFromApplicationState<T>(this PhoneApplicationPage page, string pageKey, T defaultValue = default(T))
 		{
 			var key = GenerateKeyFromPageAndKey(page, pageKey);

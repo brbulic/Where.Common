@@ -1,76 +1,78 @@
 ﻿using System;
-using System.Net;
 
 namespace Where.Api
 {
-    public sealed class ApiResult
-    {
-        private readonly Object _userState;
-        private readonly Exception _error;
-        private readonly bool _cancelled;
-        private readonly String _result;
+	/// <summary>
+	/// Standard ApiResult containing string and exception.
+	/// </summary>
+	public sealed class ApiResult
+	{
+		private readonly Object _userState;
+		private readonly Exception _error;
+		private readonly String _responseString;
+		private readonly WebApiServerStatus _resultStatus;
+
+		private ApiResult()
+		{
+			_userState = null;
+			_error = new Exception();
+			_responseString = String.Empty;
+		}
+
+		/// <summary>
+		/// What's the situation here?
+		/// </summary>
+		public WebApiServerStatus ResultStatus
+		{
+			get { return _resultStatus; }
+		}
+
+		/// <summary>
+		/// The string recieved by a HTTP request
+		/// </summary>
+		public string ResponseString
+		{
+			get { return _responseString; }
+		}
+
+		/// <summary>
+		/// If error, the exception error is shown here.
+		/// </summary>
+		public Exception Error
+		{
+			get { return _error; }
+		}
+
+		/// <summary>
+		/// The user object reference used in the request is found here.
+		/// </summary>
+		public object UserState
+		{
+			get { return _userState; }
+		}
+		
+		/// <summary>
+		/// Create an ApiResult object for a completed request.
+		/// </summary>
+		/// <param name="userState">User state.</param>
+		/// <param name="exception">Null if all OK.</param>
+		/// <param name="result">Status.</param>
+		/// <param name="responseString">Returned string from the request.</param>
+		internal ApiResult(object userState, Exception exception, WebApiServerStatus result, string responseString)
+		{
+			_userState = userState;
+			_responseString = responseString;
+			_error = exception;
+			_resultStatus = result;
+		}
+
+		private static ApiResult _empty;
+
+		public static ApiResult CreateEmpty
+		{
+			get { return _empty ?? (_empty = new ApiResult()); }
+		}
 
 
-        private ApiResult()
-        {
-            _userState = null;
-            _error = new Exception();
-            _cancelled = false;
-            _result = String.Empty;
-        }
-
-        public ApiResult(object userState, Exception error, bool cancelled, string result)
-        {
-            _userState = userState;
-            _result = result;
-            _cancelled = cancelled;
-            _error = error;
-        }
-
-        public string Result
-        {
-            get { return _result; }
-        }
-
-        public bool Cancelled
-        {
-            get { return _cancelled; }
-        }
-
-        public Exception Error
-        {
-            get { return _error; }
-        }
-
-        public object UserState
-        {
-            get { return _userState; }
-        }
-
-        public static ApiResult FromDownloadStringCompletedEventArgs(DownloadStringCompletedEventArgs e)
-        {
-            ApiResult tempResult;
-
-            try
-            {
-                tempResult = new ApiResult(e.UserState, e.Error, e.Cancelled, e.Result);
-
-            }
-            catch (Exception x)
-            {
-                Utils.ErrorLogInstance.AddError("FromDownloadStringCompletedEventArgs", x.Message);
-                tempResult = new ApiResult(e.UserState, e.Error, e.Cancelled, String.Empty);
-            }
-
-            return tempResult;
-        }
-
-        private static ApiResult _empty;
-        public static ApiResult CreateEmpty
-        {
-            get { return _empty ?? (_empty = new ApiResult()); }
-        }
-
-
-    }
+	}
 }

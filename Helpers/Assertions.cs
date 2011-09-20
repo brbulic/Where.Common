@@ -16,11 +16,17 @@ namespace Where
 		public const string ListMustBeEmpty = @"List should be empty before requesting values.";
 		public const string ListMustNotBeEmpty = @"List should not be empty before requesting values.";
 
-		public static void NotNullArgument(object argument, string argumentName)
+		/// <summary>
+		/// Test an argument if it's null. Asserts in DEBUG mode, throws an exception if in RELEASE
+		/// </summary>
+		/// <param name="argument">Argument to test</param>
+		/// <param name="argumentName">Argument name</param>
+		/// <param name="reason">Add a reason (optional)</param>
+		public static void NotNullArgument(object argument, string argumentName, string reason = null)
 		{
 
 #if DEBUG
-			Debug.Assert(argument != null, ArgumentNullMessage);
+			Debug.Assert(argument != null, string.Format("{0} {1}", ArgumentNullMessage, reason));
 #else
 
 			if (argument == null)
@@ -28,6 +34,11 @@ namespace Where
 #endif
 		}
 
+		/// <summary>
+		/// Test for a value being null. Asserts in DEBUG, throws in RELEASE.
+		/// </summary>
+		/// <param name="argument">Reference to test</param>
+		/// <param name="reason">Why shouldn't it be null?</param>
 		public static void NotNullValue(object argument, string reason = null)
 		{
 #if DEBUG
@@ -38,12 +49,24 @@ namespace Where
 #endif
 		}
 
-
+		/// <summary>
+		/// Check if a reference has an expected value in the calling Application state. The predicate version. Asserts in DEBUG, throws in RELEASE.
+		/// </summary>
+		/// <typeparam name="T">Checkable type</typeparam>
+		/// <param name="validationDelegate">Predicate to test the value</param>
+		/// <param name="value">The tested value's reference</param>
+		/// <param name="reason">Write what should be expected and why.</param>
 		public static void IsValueValid<T>(Predicate<T> validationDelegate, T value, string reason = null)
 		{
 			IsValueValid(validationDelegate(value));
 		}
 
+
+		/// <summary>
+		/// Check if a state of a value is valid when called. Asserts in DEBUG, throws in RELEASE.
+		/// </summary>
+		/// <param name="condition">True if value valid. Test by yourself!</param>
+		/// <param name="reason">Write what should be expected and why.</param>
 		public static void IsValueValid(bool condition, string reason = null)
 		{
 #if DEBUG
@@ -54,6 +77,11 @@ namespace Where
 #endif
 		}
 
+		/// <summary>
+		/// Check if a string isn't null or empty. Asserts in DEBUG, throws in RELEASE.
+		/// </summary>
+		/// <param name="argumentValue">String to test</param>
+		/// <param name="reason">Why should it not be null?</param>
 		public static void StringNotNullOrEmpty(string argumentValue, string reason = null)
 		{
 #if DEBUG
