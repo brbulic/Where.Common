@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.20506</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{41651DA4-D32B-4407-90F3-1D7FD4EBFD6B}</ProjectGuid>
+    <ProjectTypeGuids>{C089C8C0-30E0-4E22-80C0-CE093F111A43};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Where.Common</RootNamespace>
+    <AssemblyName>Where.Common</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
+    <TargetFrameworkProfile>WindowsPhone</TargetFrameworkProfile>
+    <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
+    <SilverlightApplication>false</SilverlightApplication>
+    <ValidateXaml>true</ValidateXaml>
+    <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>Bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;TRACE;SILVERLIGHT;WINDOWS_PHONE</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>Bin\Release</OutputPath>
+    <DefineConstants>TRACE;SILVERLIGHT;WINDOWS_PHONE</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoConfig>true</NoConfig>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Phone" />
+    <Reference Include="Newtonsoft.Json.WindowsPhone">
+      <HintPath>..\Binaries\Newtonsoft.Json.WindowsPhone.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows" />
+    <Reference Include="system" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Net" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Api\ApiBase.cs" />
+    <Compile Include="Controls\PerformanceBarBase\PerformanceProgressBar.cs" />
+    <Compile Include="Controls\PerformanceBarBase\RelativeAnimatingContentControl.cs" />
+    <Compile Include="Controls\ProfileButton.cs" />
+    <Compile Include="Controls\WhereProgressBar.cs" />
+    <Compile Include="DataController\Interfaces\IPrivatePoolMember.cs" />
+    <Compile Include="DataController\Interfaces\ISuperintendentDataCore.cs" />
+    <Compile Include="DataController\InternalObjectPoolKey.cs" />
+    <Compile Include="Helpers\ApiHelpers.cs" />
+    <Compile Include="Api\ApiResult.cs" />
+    <Compile Include="BindableFavoritesCollection.cs" />
+    <Compile Include="DataController\SerializableSharedDataAttribute.cs" />
+    <Compile Include="Diagnostics\ApiDebug.cs" />
+    <Compile Include="Diagnostics\WhereDebug.cs" />
+    <Compile Include="Controls\HeaderControl.cs" />
+    <Compile Include="Helpers\Assertions.cs" />
+    <Compile Include="Helpers\CollectionHelpers.cs" />
+    <Compile Include="Helpers\EnumHelpers.cs" />
+    <Compile Include="Helpers\Extenders.cs" />
+    <Compile Include="Helpers\Services.cs" />
+    <Compile Include="Helpers\VisualTreeHelpers.cs" />
+    <Compile Include="IPoiListMember.cs" />
+    <Compile Include="IsolatedStorageJson.cs" />
+    <Compile Include="IsolatedStorageBase.cs" />
+    <Compile Include="IsolatedStorageStringWriter.cs" />
+    <Compile Include="Logger\ErrorLog.cs" />
+    <Compile Include="Logger\ErrorLogCollection.cs" />
+    <Compile Include="Messaging\DialogMessage.cs" />
+    <Compile Include="Messaging\GenericMessage.cs" />
+    <Compile Include="Messaging\Helpers\IExecuteWithObject.cs" />
+    <Compile Include="Messaging\Helpers\WeakAction.cs" />
+    <Compile Include="Messaging\Helpers\WeakActionGeneric.cs" />
+    <Compile Include="Messaging\IMessenger.cs" />
+    <Compile Include="Messaging\MessageBase.cs" />
+    <Compile Include="Messaging\Messenger.cs" />
+    <Compile Include="Messaging\NotificationMessage.cs" />
+    <Compile Include="Messaging\NotificationMessageAction.cs" />
+    <Compile Include="Messaging\NotificationMessageActionGeneric.cs" />
+    <Compile Include="Messaging\NotificationMessageGeneric.cs" />
+    <Compile Include="Messaging\NotificationMessageWithCallback.cs" />
+    <Compile Include="Messaging\PropertyChangedMessage.cs" />
+    <Compile Include="Messaging\PropertyChangedMessageBase.cs" />
+    <Compile Include="Mvvm\AppState.cs" />
+    <Compile Include="Mvvm\DataViewModel.cs" />
+    <Compile Include="Mvvm\MessagePageViewModel.cs" />
+    <Compile Include="Mvvm\PageCommon.cs" />
+    <Compile Include="Mvvm\PageViewModel.cs" />
+    <Compile Include="Mvvm\ViewModelBase.cs" />
+    <Compile Include="DataController\Helpers.cs" />
+    <Compile Include="DataController\Interfaces\ISuperintendent.cs" />
+    <Compile Include="DataController\SuperintendendentBase.cs" />
+    <Compile Include="DataController\SuperintendentDataController.cs" />
+    <Compile Include="PlatformInfo.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\BackgroundDispatcher.cs" />
+    <Compile Include="Services\CacheService.cs" />
+    <Compile Include="Services\ConcurrentRequestWebService.cs" />
+    <Compile Include="Services\Interfaces\IBackgroundDispatcher.cs" />
+    <Compile Include="Services\Interfaces\ICacheService.cs" />
+    <Compile Include="Services\Interfaces\IOperationData.cs" />
+    <Compile Include="Diagnostics\WhereDebugService.cs" />
+    <Compile Include="Services\Interfaces\IWebService.cs" />
+    <Compile Include="Services\ThreadObjectQueue.cs" />
+    <Compile Include="Services\WebService.cs" />
+    <Compile Include="Services\WebServiceBase.cs" />
+    <Compile Include="Services\WhereService.cs" />
+    <Compile Include="Controls\SimpleTile.cs" />
+    <Compile Include="WhereException.cs" />
+    <Resource Include="Themes\generic.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Resource>
+    <Compile Include="TombstoneHelpers.cs" />
+    <Compile Include="Helpers\TransferState.cs" />
+    <Compile Include="Helpers\Utils.cs" />
+    <Compile Include="WeakReference.cs" />
+    <Compile Include="WhereEnums.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Themes\TitleImage.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight for Phone\$(TargetFrameworkVersion)\Microsoft.Silverlight.$(TargetFrameworkProfile).Overrides.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight for Phone\$(TargetFrameworkVersion)\Microsoft.Silverlight.CSharp.targets" />
+  <ProjectExtensions />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

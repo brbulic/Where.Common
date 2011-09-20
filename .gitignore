@@ -1,0 +1,8 @@
+# Folders
+
+Bin/*
+obj/*
+
+
+# Files
+*.csproj.user
