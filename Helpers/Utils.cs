@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Phone.Info;
@@ -22,19 +24,34 @@ namespace Where
 
 
 		private static StringBuilder _builder;
-		public static StringBuilder StringBuilder
-		{
-			get
-			{
-				lock (UniversalThreadSafeAccessLockObject)
-				{
+        public static StringBuilder StringBuilder
+        {
+            get
+            {
+                lock (UniversalThreadSafeAccessLockObject)
+                {
 
-					return _builder ?? (_builder = new StringBuilder());
-				}
-			}
-		}
+                return _builder ?? (_builder = new StringBuilder());
+                }
+            }
+        }
 
+        public static string StringArrayToString(string separator, IList<string> array)
+        {
+            var myBuilder = new StringBuilder();
 
+            myBuilder.Flush();
+
+            if (array.Count < 1)
+                return "";
+
+            myBuilder.Append(array[0]);
+            for (var i = 1; i < array.Count; i++)
+                myBuilder.Append(separator).Append(array[i]);
+
+            return myBuilder.ToString();
+
+        }
 
 		/// <summary>
 		/// Gets the current ErrorLog collection
@@ -65,6 +82,10 @@ namespace Where
 			return _cache;
 		}
 
+        public static string ToStringWith8Digits(this double x)
+        {
+            return String.Format(CultureInfo.InvariantCulture, "{0:0.########}", x);
+        }
 
 		/// <summary>
 		/// Gets a phone a formats it to look like a US phone number.
@@ -88,6 +109,14 @@ namespace Where
 			foreach (var oneByte in bytes)
 				hex.AppendFormat("{0:x2}", oneByte);
 			return hex.ToString();
+		}
+
+        /// <summary>
+		/// Default Background worker
+		/// </summary>
+		public static IBackgroundDispatcher MyBackgroundWorker
+		{
+			get { return BackgroundDispatcher.Instance; }
 		}
 
 		private static string _whereUserId;
