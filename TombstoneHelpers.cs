@@ -6,6 +6,7 @@ using System.Windows;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using Newtonsoft.Json;
+using Where.Common.Diagnostics;
 
 namespace Where
 {
@@ -101,6 +102,12 @@ namespace Where
 			return default(TombstoneDataClass);
 		}
 
+		/// <summary>
+		/// Save an object to application state by Key. If you try to resave for a same key, it will overwrite the previous one.
+		/// </summary>
+		/// <param name="page">Page making the save</param>
+		/// <param name="pageKey">Key to save</param>
+		/// <param name="value">Value of the object</param>
 		public static void SaveObjectToApplicationState(this PhoneApplicationPage page, string pageKey, object value)
 		{
 			var key = GenerateKeyFromPageAndKey(page, pageKey);
@@ -114,10 +121,13 @@ namespace Where
 			else
 			{
 				if (getDataClass.ClassName == value.GetType().Name)
+				{
 					getDataClass.TombstoneableObject = value;
+					WhereDebug.WriteLine(string.Format("Changing state value for key \"{0}\"...", key));
+				}
 				else
 				{
-					Debug.WriteLine("Changing state value for key: \"{0}\"", key);
+					WhereDebug.WriteLine(string.Format("Changing state value and state type for key: \"{0}\"", key));
 					SavedObjects.Remove(key);
 					SavedObjects.Add(key, new TombstoneDataClass(TombstoneTarget.ApplicationState, value, value.GetType().Name, PhoneApplicationService.Current.State));
 				}
@@ -125,6 +135,33 @@ namespace Where
 			}
 		}
 
+		/// <summary>
+		/// Remove object from application state
+		/// </summary>
+		/// <param name="page"></param>
+		/// <param name="userKey"></param>
+		public static void RemoveObjectFromApplicationState(this PhoneApplicationPage page, string userKey)
+		{
+			var key = GenerateKeyFromPageAndKey(page, userKey);
+			var dataClass = GetDataClassForKey(key);
+
+			if (dataClass.GetTombstoneTarget == TombstoneTarget.NoState)
+			{
+				WhereDebug.WriteLine(string.Format("Key {0} doesn't exist!", userKey));
+
+			}
+			else if (PhoneApplicationService.Current.State.DictionaryContainsValueSafe(key))
+			{
+				PhoneApplicationService.Current.State.Remove(key);
+			}
+
+			SavedObjects.Remove(key);
+		}
+
+		/// <summary>
+		/// Remove all keys from a page
+		/// </summary>
+		/// <param name="page"></param>
 		public static void RemoveAllKeysFromPage(this PhoneApplicationPage page)
 		{
 			var pageName = page.GetType().Name;
@@ -133,10 +170,15 @@ namespace Where
 			Debug.WriteLine("Cleaning up keys on page cleanup!");
 
 			var list = SavedObjects.Where(tombstoneDataClass => tombstoneDataClass.Key.StartsWith(pageNamePrefix)).ToList();
-
 			foreach (var tombstoneDataClass in list)
 			{
 				SavedObjects.Remove(tombstoneDataClass);
+			}
+
+			var savedList = PhoneApplicationService.Current.State.Where(item => item.Key.StartsWith(pageNamePrefix)).ToList();
+			foreach (var keyValuePair in savedList)
+			{
+				PhoneApplicationService.Current.State.Remove(keyValuePair);
 			}
 		}
 
@@ -144,7 +186,9 @@ namespace Where
 		{
 			var pageNameWithPrefix = page.GetType().Name + "_";
 			var hasAny = SavedObjects.Any(value => value.Key.StartsWith(pageNameWithPrefix));
-			return hasAny;
+			var hasAnyState = PhoneApplicationService.Current.State.Any(kvp => kvp.Key.StartsWith(pageNameWithPrefix));
+
+			return hasAny || hasAnyState;
 		}
 
 		public static T RestoreObjectFromApplicationState<T>(this PhoneApplicationPage page, string pageKey, T defaultValue = default(T))
@@ -164,12 +208,19 @@ namespace Where
 			else
 			{
 				output = RestoreFromStateDirectly<T>(key);
+				SaveObjectToApplicationState(page, pageKey, output);
 			}
 
 			return output;
 
 		}
 
+		/// <summary>
+		/// Generate a page key for a user state key.
+		/// </summary>
+		/// <param name="page"></param>
+		/// <param name="key"></param>
+		/// <returns></returns>
 		private static string GenerateKeyFromPageAndKey(PhoneApplicationPage page, string key)
 		{
 			var name = page.GetType().Name;
