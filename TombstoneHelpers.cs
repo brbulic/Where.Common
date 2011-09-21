@@ -10,6 +10,9 @@ using Where.Common.Diagnostics;
 
 namespace Where
 {
+	/// <summary>
+	/// LAZYYYYYY :))))))))))
+	/// </summary>
 	public static class TombstoneHelpers
 	{
 		static TombstoneHelpers()
