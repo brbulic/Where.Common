@@ -31,8 +31,9 @@ namespace Where
 		/// <typeparam name="T">The parameter in the object state</typeparam>
 		/// <param name="key">Dictionary key of the object</param>
 		/// <param name="defaultValue">Uses default(T) as default, but if set, returns that value if the key doesn't exist. </param>
+		/// <param name="removeOnPull"></param>
 		/// <returns>The object casted to a type T if success</returns>
-		public static T PullFromDataBin<T>(string key, T defaultValue = default(T))
+		public static T PullFromDataBin<T>(string key, T defaultValue = default(T), bool removeOnPull = true)
 		{
 			T result;
 
@@ -41,7 +42,9 @@ namespace Where
 				try
 				{
 					result = (T)LocalDataBin[key];
-					LocalDataBin.Remove(key);
+					
+					if (removeOnPull)
+						LocalDataBin.Remove(key);
 				}
 				catch (Exception e)
 				{
@@ -56,6 +59,8 @@ namespace Where
 
 			return result;
 		}
+
+
 
 	}
 }
