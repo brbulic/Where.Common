@@ -186,7 +186,7 @@ namespace Where
 			var pageName = page.GetType().Name;
 			var pageNamePrefix = string.Format("{0}_", pageName);
 
-			Debug.WriteLine("Cleaning up keys on page cleanup!");
+			Debug.WriteLine("Cleaning up keys for page \"{0}\"", page.GetType().Name);
 
 			var list = SavedObjects.Where(tombstoneDataClass => tombstoneDataClass.Key.StartsWith(pageNamePrefix)).ToList();
 			foreach (var tombstoneDataClass in list)
