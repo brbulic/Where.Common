@@ -6,6 +6,9 @@ using Microsoft.Phone.Controls;
 
 namespace Where.Common.Mvvm
 {
+	/// <summary>
+	/// Primary page for all page common operations
+	/// </summary>
 	public class PageCommon : PhoneApplicationPage
 	{
 		private readonly PageViewModel _myViewModel;

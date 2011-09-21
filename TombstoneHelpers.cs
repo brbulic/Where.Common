@@ -10,6 +10,9 @@ using Where.Common.Diagnostics;
 
 namespace Where
 {
+	/// <summary>
+	/// LAZYYYYYY :))))))))))
+	/// </summary>
 	public static class TombstoneHelpers
 	{
 		static TombstoneHelpers()
@@ -56,10 +59,9 @@ namespace Where
 			PageState,
 		}
 
-		private struct TombstoneDataClass
+		private class TombstoneDataClass
 		{
 			private readonly TombstoneTarget _tombstoneTarget;
-			private object _tombstoneableObject;
 			private readonly string _className;
 			private readonly IDictionary<string, object> _targetStateObjectDictionary;
 
@@ -68,7 +70,7 @@ namespace Where
 				_tombstoneTarget = tombstoneTarget;
 				_targetStateObjectDictionary = targetStateObjectDictionary;
 				_className = className;
-				_tombstoneableObject = tombstoneableObject;
+				TombstoneableObject = tombstoneableObject;
 			}
 
 			public IDictionary<string, object> TargetStateObjectDictionary
@@ -81,15 +83,32 @@ namespace Where
 				get { return _className; }
 			}
 
-			public object TombstoneableObject
-			{
-				get { return _tombstoneableObject; }
-				set { _tombstoneableObject = value; }
-			}
+			public object TombstoneableObject { get; set; }
 
 			public TombstoneTarget GetTombstoneTarget
 			{
 				get { return _tombstoneTarget; }
+			}
+
+			private static readonly TombstoneDataClass DefaultValue = new TombstoneDataClass(TombstoneTarget.NoState, null, "EmptyType", null);
+
+			/// <summary>
+			/// Get a default class with no state
+			/// </summary>
+			/// <returns></returns>
+			public static TombstoneDataClass Default()
+			{
+				return DefaultValue;
+			}
+
+			private string _stringCache;
+			public override string ToString()
+			{
+				if (string.IsNullOrEmpty(_stringCache))
+				{
+					_stringCache = string.Format("Value Type:{0}, Object ToString:{1}", _className ?? "No Type", TombstoneableObject ?? "No Data");
+				}
+				return _stringCache;
 			}
 		}
 
@@ -99,7 +118,7 @@ namespace Where
 			if (SavedObjects.ContainsKey(key))
 				return SavedObjects[key];
 
-			return default(TombstoneDataClass);
+			return TombstoneDataClass.Default();
 		}
 
 		/// <summary>
@@ -113,7 +132,7 @@ namespace Where
 			var key = GenerateKeyFromPageAndKey(page, pageKey);
 			var getDataClass = GetDataClassForKey(key);
 
-			if (getDataClass.GetTombstoneTarget == TombstoneTarget.NoState)
+			if (getDataClass == TombstoneDataClass.Default())
 			{
 				var newDataClass = new TombstoneDataClass(TombstoneTarget.ApplicationState, value, value.GetType().Name, PhoneApplicationService.Current.State);
 				SavedObjects.Add(key, newDataClass);
@@ -234,7 +253,7 @@ namespace Where
 
 			bool result;
 
-			if (getDataClass.GetTombstoneTarget != TombstoneTarget.NoState)
+			if (getDataClass != TombstoneDataClass.Default())
 			{
 				result = true;
 			}

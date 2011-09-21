@@ -7,8 +7,9 @@ namespace Where.Common.Mvvm
 	/// </summary>
 	public abstract class MessagePageViewModel : PageViewModel
 	{
-
+		
 		private string _statusMessage;
+		
 		/// <summary>
 		/// Bind this to a TextBlock in the View to display the message
 		/// </summary>
