@@ -13,7 +13,7 @@ namespace Where.Common.Mvvm
 	{
 		private readonly PageViewModel _myViewModel;
 
-		private bool _isTombstone;
+		private static bool _isTombstone;
 
 		public PageViewModel PageViewModel
 		{
