@@ -77,8 +77,8 @@ namespace Where.Common.Mvvm
 						var includesPreviousState = this.ContainsStateElementsForPage();
 						if (includesPreviousState)
 						{
-							_isTombstone = true;
-							PageViewModel.LoadFromTombstone(this);
+							if (_isTombstone)
+								PageViewModel.LoadFromTombstone(this);
 						}
 						break;
 					case CurrentAppState.Starting:

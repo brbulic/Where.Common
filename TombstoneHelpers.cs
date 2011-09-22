@@ -217,7 +217,7 @@ namespace Where
 
 			T output;
 
-			if (getDataClass.GetTombstoneTarget != TombstoneTarget.NoState)
+			if (getDataClass != TombstoneDataClass.Default())
 			{
 				if (getDataClass.TombstoneableObject.GetType() == typeof(T))
 					output = (T)getDataClass.TombstoneableObject;

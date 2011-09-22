@@ -44,12 +44,12 @@ namespace Where.Common.Services
 		{
 			get { return _instance ?? (_instance = new ConcurrentRequestWebService()); }
 		}
-		
+
 		private ConcurrentRequestWebService()
 		{
 			Start();
 		}
-		
+
 		private void Start()
 		{
 			IsRunning = true;
