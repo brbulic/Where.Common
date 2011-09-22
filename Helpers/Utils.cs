@@ -24,11 +24,24 @@ namespace Where
 
 
 		private static StringBuilder _builder;
-		public static StringBuilder StringBuilder
+		private static StringBuilder StringBuilder
 		{
 			get
 			{
 				return _builder ?? (_builder = new StringBuilder());
+
+			}
+		}
+
+		private static readonly HandleLocker<StringBuilder> BuilderHandle = new HandleLocker<StringBuilder>(StringBuilder, UniversalThreadSafeAccessLockObject);
+
+		public static HandleLocker<StringBuilder> GetStringBuilderWithHandle
+		{
+			get
+			{
+				BuilderHandle.Lock();
+				return BuilderHandle;
+
 			}
 		}
 
