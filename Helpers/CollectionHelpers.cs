@@ -57,30 +57,30 @@ namespace Where
 															}
 														}, source);
 
-			/*
-			ThreadPool.QueueUserWorkItem(state =>
-			{
-				var enumerable = (IEnumerable<T>)state;
-				var currentElement = 0;
-				foreach (var element in enumerable)
-				{
-					var dumb = element;
-					Deployment.Current.Dispatcher.BeginInvoke(() => destination.Add(dumb));
-					currentElement++;
 
-					if (sleepAfter > 0)
-					{
-						if (currentElement % sleepAfter == 0)
-							Thread.Sleep(sleep);
-					}
-					else
-					{
-						Thread.Sleep(sleep);
-					}
-				}
+			//ThreadPool.QueueUserWorkItem(state =>
+			//{
+			//    var enumerable = (IEnumerable<T>)state;
+			//    var currentElement = 0;
+			//    foreach (var element in enumerable)
+			//    {
+			//        var dumb = element;
+			//        Deployment.Current.Dispatcher.BeginInvoke(() => destination.Add(dumb));
+			//        currentElement++;
+
+			//        if (sleepAfter > 0)
+			//        {
+			//            if (currentElement % sleepAfter == 0)
+			//                Thread.Sleep(sleep);
+			//        }
+			//        else
+			//        {
+			//            Thread.Sleep(sleep);
+			//        }
+			//    }
 
 
-			}, source);*/
+			//}, source);
 		}
 	}
 

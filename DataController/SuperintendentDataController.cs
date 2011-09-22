@@ -8,6 +8,7 @@ using System.Windows;
 using Newtonsoft.Json;
 using Where.Common.DataController.Interfaces;
 using Where.Common.DataController;
+using Where.Common.Diagnostics;
 
 namespace Where.Common.DataController
 {
@@ -149,7 +150,7 @@ namespace Where.Common.DataController
 
 
 		private object _getAccessorHandle = new object();
-		
+
 		private SuperindententDataObject<TE> GrabFromJson<TE>(string propertyName)
 		{
 			var fileNameString = GetFileNameForProperty(propertyName);
@@ -233,7 +234,7 @@ namespace Where.Common.DataController
 					throw new ArgumentOutOfRangeException();
 			}
 
-			Debug.WriteLine("~ SuperintendentDataController REPORTS: Retrieving property \"{0}\"'s value from JSON. Future retrieves will go to memory.", propertyName);
+			WhereDebug.WriteLine(string.Format("~ SuperintendentDataController REPORTS: Retrieving property \"{0}\"'s value from JSON. Future retrieves will go to memory.", propertyName));
 			return result;
 		}
 
@@ -255,7 +256,6 @@ namespace Where.Common.DataController
 		{
 			SuperintendendentBase<T>.ContainsPropertyOfType(typeof(TE), propertyName);
 
-			Debug.Assert(propertyName != "CurrentServerType");
 			/*
 			
 			 real save operations
@@ -284,7 +284,7 @@ namespace Where.Common.DataController
 
 													// These three can run concurrent...
 													var getFileName = GetFileNameForProperty(propertyName);
-													Debug.WriteLine("Saving property \"{0}\" to filename \"{1}\"", propertyName, getFileName);
+													WhereDebug.WriteLine(string.Format("Saving property \"{0}\" to filename \"{1}\"", propertyName, getFileName));
 													var result = RealSaveOperation(value, getFileName);
 
 													// ...but this one must wait for the previous operation to complete.

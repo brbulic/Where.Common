@@ -113,6 +113,7 @@
     <Compile Include="Services\BackgroundDispatcher.cs" />
     <Compile Include="Services\CacheService.cs" />
     <Compile Include="Services\ConcurrentRequestWebService.cs" />
+    <Compile Include="Services\HandleLocker.cs" />
     <Compile Include="Services\Interfaces\IBackgroundDispatcher.cs" />
     <Compile Include="Services\Interfaces\ICacheService.cs" />
     <Compile Include="Services\Interfaces\IOperationData.cs" />
