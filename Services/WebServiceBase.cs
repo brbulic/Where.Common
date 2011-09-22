@@ -195,7 +195,7 @@ namespace Where.Common.Services
 
 
 		#endregion
-		
+
 		#region Internal Helpers
 
 		protected static WebServiceEventArgs GenerateFromException(WebException e, bool hasInternet, object userState)
@@ -246,7 +246,7 @@ namespace Where.Common.Services
 			return PrivateRequestData.CreateRequest(RequestType.Post, url, args, userState, result, onUi);
 		}
 
-		
+
 		#endregion
 
 		#region Private Classes

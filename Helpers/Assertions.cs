@@ -30,7 +30,7 @@ namespace Where
 #else
 
 			if (argument == null)
-				throw new ArgumentNullException(argumentName, ArgumentNullMessage);
+				throw new ArgumentNullException(argumentName, reason ?? ArgumentNullMessage);
 #endif
 		}
 
@@ -42,7 +42,7 @@ namespace Where
 		public static void NotNullValue(object argument, string reason = null)
 		{
 #if DEBUG
-			Debug.Assert(argument != null, ArgumentNullMessage);
+			Debug.Assert(argument != null, reason ?? ArgumentNullMessage);
 #else
 			if (argument == null)
 				throw new NullReferenceException(ArgumentNullMessage, new WhereException(ArgumentNullMessage, reason));

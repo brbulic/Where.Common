@@ -22,26 +22,13 @@ namespace Where
 
 		#endregion
 
-
-		private static StringBuilder _builder;
-		private static StringBuilder StringBuilder
-		{
-			get
-			{
-				return _builder ?? (_builder = new StringBuilder());
-
-			}
-		}
-
-		private static readonly HandleLocker<StringBuilder> BuilderHandle = new HandleLocker<StringBuilder>(StringBuilder, UniversalThreadSafeAccessLockObject);
+		private static readonly HandleLocker<StringBuilder> BuilderHandle = new HandleLocker<StringBuilder>(new StringBuilder(), UniversalThreadSafeAccessLockObject);
 
 		public static HandleLocker<StringBuilder> GetStringBuilderWithHandle
 		{
 			get
 			{
-				BuilderHandle.Lock();
 				return BuilderHandle;
-
 			}
 		}
 

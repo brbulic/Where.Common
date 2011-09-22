@@ -24,24 +24,41 @@ namespace Where
 		/// <returns>The string containing all parameters.</returns>
 		public static string ProcessArguments(IDictionary<string, string> arguments, bool ranval = true)
 		{
-			StringBuilder.Flush();
-			StringBuilder.Append("?");
+			// Aquire builder 
+			var builderHandle = GetStringBuilderWithHandle;
 
-			if (arguments == null || arguments.Count == 0 && ranval)
-			{
-				StringBuilder.Append("ranval=").Append(Environment.TickCount);
-				return StringBuilder.ToString();
-			}
+			var returner = builderHandle.ExecuteSafeOperationOnObject(str =>
+																		{
 
-			foreach (var keyValuePair in arguments)
-				StringBuilder.Append(keyValuePair.Key).Append("=").Append(keyValuePair.Value).Append("&");
+																			string result;
 
-			if (ranval)
-				StringBuilder.Append("ranval=").Append(Environment.TickCount);
-			else
-				StringBuilder.Remove(StringBuilder.Length - 1, 1);
+																			// Prepare builder
+																			str.Flush();
+																			str.Append("?");
 
-			return StringBuilder.ToString();
+																			if (arguments == null || arguments.Count == 0 && ranval)
+																			{
+																				str.Append("ranval=").Append(Environment.TickCount);
+																				result = str.ToString();
+																			}
+																			else
+																			{
+																				foreach (var keyValuePair in arguments)
+																					str.Append(keyValuePair.Key).Append("=").Append(keyValuePair.Value).Append("&");
+																				if (ranval)
+																					str.Append("ranval=").Append(Environment.TickCount);
+																				else
+																					str.Remove(str.Length - 1, 1);
+
+																				result = str.ToString();
+																			}
+
+																			return result;
+																		});
+
+
+
+			return returner;
 		}
 
 

@@ -12,7 +12,7 @@ namespace Where.Common.Diagnostics
 #if DEBUG
 		internal static bool EnableOnlineDebug = true;
 #else
-        public static bool EnableOnlineDebug = false;
+		public static bool EnableOnlineDebug = false;
 #endif
 		private static readonly String UserDevice = string.Format("{0} {1}", DeviceExtendedProperties.GetValue("DeviceManufacturer"), DeviceExtendedProperties.GetValue("DeviceName"));
 
@@ -22,7 +22,7 @@ namespace Where.Common.Diagnostics
 #if DEBUG
 			WriteLine("Debugging thread started");
 #else
-            WriteLine("Online debugging started via command!");
+			WriteLine("Online debugging started via command!");
 #endif
 		}
 
@@ -58,35 +58,24 @@ namespace Where.Common.Diagnostics
 		/// <returns></returns>
 		private static string GetThreadInfo()
 		{
-
-			StringBuilder builder;
-
 			var aquireBuilder = Utils.GetStringBuilderWithHandle;
 
-			if (aquireBuilder != null)
-				builder = aquireBuilder.AquireResource;
-			else
-			{
-				builder = new StringBuilder();
-				Debug.Assert(true, "This will always appear if the builder isn't available");
-			}
+			var result = aquireBuilder.ExecuteSafeOperationOnObject(builder =>
+														{
+															builder.Flush();
+
+															if (String.IsNullOrEmpty(Thread.CurrentThread.Name))
+															{
+																builder.Append("Thread: ").Append(Thread.CurrentThread.ManagedThreadId);
+															}
+															else
+																builder.Append(Thread.CurrentThread.Name);
+
+															builder.Append(Thread.CurrentThread.IsBackground ? "(Background)" : "(Foreground)");
 
 
-			builder.Flush();
-
-			if (String.IsNullOrEmpty(Thread.CurrentThread.Name))
-			{
-				builder.Append("Thread: ").Append(Thread.CurrentThread.ManagedThreadId);
-			}
-			else
-				builder.Append(Thread.CurrentThread.Name);
-
-			builder.Append(Thread.CurrentThread.IsBackground ? "(Background)" : "(Foreground)");
-
-
-			var result = builder.ToString();
-			if (aquireBuilder != null)
-				aquireBuilder.Release();
+															return builder.ToString();
+														});
 
 			return result;
 		}
