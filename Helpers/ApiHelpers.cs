@@ -26,35 +26,39 @@ namespace Where
 		{
 			// Aquire builder 
 			var builderHandle = GetStringBuilderWithHandle;
-			var stringBuilder = builderHandle.AquireResource;
 
-			// Prepare builder
-			stringBuilder.Flush();
-			stringBuilder.Append("?");
+			var returner = builderHandle.ExecuteSafeOperationOnObject(str =>
+																		{
 
-			// Continue
+																			string result;
 
-			string result;
+																			// Prepare builder
+																			str.Flush();
+																			str.Append("?");
 
-			if (arguments == null || arguments.Count == 0 && ranval)
-			{
-				stringBuilder.Append("ranval=").Append(Environment.TickCount);
-				result = stringBuilder.ToString();
-			}
-			else
-			{
-				foreach (var keyValuePair in arguments)
-					stringBuilder.Append(keyValuePair.Key).Append("=").Append(keyValuePair.Value).Append("&");
-				if (ranval)
-					stringBuilder.Append("ranval=").Append(Environment.TickCount);
-				else
-					stringBuilder.Remove(stringBuilder.Length - 1, 1);
+																			if (arguments == null || arguments.Count == 0 && ranval)
+																			{
+																				str.Append("ranval=").Append(Environment.TickCount);
+																				result = str.ToString();
+																			}
+																			else
+																			{
+																				foreach (var keyValuePair in arguments)
+																					str.Append(keyValuePair.Key).Append("=").Append(keyValuePair.Value).Append("&");
+																				if (ranval)
+																					str.Append("ranval=").Append(Environment.TickCount);
+																				else
+																					str.Remove(str.Length - 1, 1);
 
-				result = stringBuilder.ToString();
-			}
+																				result = str.ToString();
+																			}
 
-			builderHandle.Release();
-			return result;
+																			return result;
+																		});
+
+
+
+			return returner;
 		}
 
 

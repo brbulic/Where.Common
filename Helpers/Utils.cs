@@ -28,9 +28,7 @@ namespace Where
 		{
 			get
 			{
-				BuilderHandle.Lock();
 				return BuilderHandle;
-
 			}
 		}
 

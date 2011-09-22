@@ -4,10 +4,14 @@ using System.Threading;
 
 namespace Where.Common.Services
 {
+	/// <summary>
+	/// An encapsulation class containing a reference on a object for accessing with thread safety. Resource reference cannot be changed
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
 	public class HandleLocker<T>
 	{
 		private readonly object _lockObject;
-		private readonly T _lockedResource;
+		private T _lockedResource;
 
 		/// <summary>
 		/// Create a new resource handler that can only be accessed if you lock and aquire a handle
@@ -24,7 +28,7 @@ namespace Where.Common.Services
 		private volatile bool _locked;
 
 		[SecurityCritical]
-		public void Lock()
+		protected void Lock()
 		{
 			Monitor.Enter(_lockObject);
 			_locked = true;
@@ -36,7 +40,7 @@ namespace Where.Common.Services
 			get { return _locked; }
 		}
 
-		public T AquireResource
+		protected T AquireResource
 		{
 			get
 			{
@@ -48,7 +52,17 @@ namespace Where.Common.Services
 		}
 
 		[SecurityCritical]
-		public void Release()
+		private void SetNewObjectValue(T newResource)
+		{
+			Lock();
+
+			_lockedResource = newResource;
+
+			Release();
+		}
+
+		[SecurityCritical]
+		protected void Release()
 		{
 			if (!_locked)
 				return;
@@ -56,6 +70,25 @@ namespace Where.Common.Services
 			Monitor.Pulse(_lockObject);
 			Monitor.Exit(_lockObject);
 			_locked = false;
+
+		}
+
+
+		/// <summary>
+		/// Execute an operation on a locked resource with internal aquire-release and return a result of type <b>TResult</b> (can be void)
+		/// </summary>
+		/// <typeparam name="TResult"></typeparam>
+		/// <param name="executableAction"></param>
+		/// <returns></returns>
+		public TResult ExecuteSafeOperationOnObject<TResult>(Func<T, TResult> executableAction)
+		{
+			Lock();
+
+			var result = executableAction(AquireResource);
+
+			Release();
+
+			return result;
 
 		}
 
