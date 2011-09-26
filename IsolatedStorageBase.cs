@@ -67,7 +67,7 @@ namespace Where.Common
         {
             var dataplan = new IsoStorageDataContainer(file, writableStream);
             Action modifiedActionDelegate = () => errorDelegate(file);
-            BackgroundDispatcher.Instance.QueueSimple(InternalWriteStreamBinary, dataplan, modifiedActionDelegate);
+            Utils.BackgroundWorkerDefault.QueueSimple(InternalWriteStreamBinary, dataplan, modifiedActionDelegate);
         }
 
         private static void InternalWriteStreamBinary(object state)
@@ -130,7 +130,7 @@ namespace Where.Common
             Action convertedFunction = () => callback(file);
 
             // Do it in another thread
-            BackgroundDispatcher.Instance.QueueSimple(InternalWriteStringUnicode, dataplan, convertedFunction);
+            Utils.BackgroundWorkerDefault.QueueSimple(InternalWriteStringUnicode, dataplan, convertedFunction);
 
         }
 

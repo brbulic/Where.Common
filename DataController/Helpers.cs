@@ -69,6 +69,17 @@ namespace Where.Common.DataController
 		}
 
 		#endregion
+
+
+		private static SuperindententDataObject<T> _default;
+
+		internal static SuperindententDataObject<T> Default()
+		{
+			if (_default == null)
+				_default = new SuperindententDataObject<T>(SuperintendentStatus.Unknown, default(T), String.Empty);
+
+			return _default;
+		}
 	}
 
 	/// <summary>

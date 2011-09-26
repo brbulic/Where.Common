@@ -33,12 +33,17 @@ namespace Where
 			if (AppState.GetCurrentAppState == CurrentAppState.Exiting)
 				return;
 
+			var currentApplicationState = PhoneApplicationService.Current.State;
+
 			foreach (var tombstoneDataClass in SavedObjects)
 			{
 				var data = tombstoneDataClass.Value;
 				if (data.TargetStateObjectDictionary != null)
 					try
 					{
+						if (currentApplicationState.ContainsKey(tombstoneDataClass.Key))
+							currentApplicationState.Remove(tombstoneDataClass.Key);
+
 						var jsonString = JsonConvert.SerializeObject(data.TombstoneableObject);
 						PhoneApplicationService.Current.State.Add(tombstoneDataClass.Key, jsonString);
 					}
@@ -169,7 +174,7 @@ namespace Where
 				WhereDebug.WriteLine(string.Format("Key {0} doesn't exist!", userKey));
 
 			}
-			else if (PhoneApplicationService.Current.State.DictionaryContainsValueSafe(key))
+			else if (PhoneApplicationService.Current.State.DictionaryContainsValue(key))
 			{
 				PhoneApplicationService.Current.State.Remove(key);
 			}

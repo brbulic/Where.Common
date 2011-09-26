@@ -107,13 +107,6 @@ namespace Where
 			return hex.ToString();
 		}
 
-		/// <summary>
-		/// Default Background worker
-		/// </summary>
-		public static IBackgroundDispatcher MyBackgroundWorker
-		{
-			get { return BackgroundDispatcher.Instance; }
-		}
 
 		private static string _whereUserId;
 		/// <summary>

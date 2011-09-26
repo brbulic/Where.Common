@@ -12,14 +12,7 @@ namespace Where.Common.Services
 	/// </summary>
 	internal class BackgroundDispatcher : IBackgroundDispatcher
 	{
-		private static BackgroundDispatcher _localDispatcher;
-
 		private readonly string _operationNullDataString = Guid.NewGuid().ToString();
-
-		public static BackgroundDispatcher Instance
-		{
-			get { return _localDispatcher ?? (_localDispatcher = new BackgroundDispatcher()); }
-		}
 
 		private readonly Thread _workerThread;
 
@@ -29,7 +22,7 @@ namespace Where.Common.Services
 
 		private readonly Queue<InternalMessagePassing> _operationsQueue = new Queue<InternalMessagePassing>();
 
-		private BackgroundDispatcher()
+		internal BackgroundDispatcher()
 		{
 			_workerThread = new Thread(ThreadRunnableMethod) { IsBackground = true };
 			_isRunning = true;
