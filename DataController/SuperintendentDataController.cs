@@ -205,10 +205,14 @@ namespace Where.Common.DataController
 					if (dict.ContainsKey(propertyName))
 					{
 						dict[propertyName] = state;
-						return true;
+
+					}
+					else
+					{
+						dict.Add(propertyName, state);
 					}
 
-					return false;
+					return true;
 				});
 			}
 
@@ -397,8 +401,10 @@ namespace Where.Common.DataController
 			var propertyName = data.PropertyName;
 			var value = data.Value;
 
+			var persistenceStatus = GetPersistenceStatusForProperty(propertyName);
 
-			if (GetPersistenceStatusForProperty(propertyName) == DataState.PendingWrite)
+
+			if (persistenceStatus == DataState.PendingWrite)
 			{
 				SetPersistanceStatusForProperty(propertyName, DataState.BeingWritten);
 

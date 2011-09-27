@@ -28,12 +28,49 @@ namespace Where
 			return;
 		}
 
-		private static void StoreStuffToAppropriateStates(object sender, EventArgs e)
+		private static bool _usingSecondaryDictionary;
+		public static bool UsingCustomDictionary
+		{
+			get { return _usingSecondaryDictionary; }
+		}
+
+
+		#region Lazy init of CurrentStateDictionary
+
+		private static IDictionary<string, object> _backingCurrentStateDictionary;
+		public static IDictionary<string, object> CurrentStateDictionary
+		{
+			get
+			{
+				if (_backingCurrentStateDictionary == null)
+				{
+					_backingCurrentStateDictionary = PhoneApplicationService.Current.State;
+					_usingSecondaryDictionary = false;
+				}
+
+				return _backingCurrentStateDictionary;
+			}
+			set
+			{
+				_usingSecondaryDictionary = value != PhoneApplicationService.Current.State;
+				_backingCurrentStateDictionary = value;
+			}
+		}
+
+		#endregion
+
+
+		public static void UseCustomDictionary(IDictionary<string, object> persistanceDictionary)
+		{
+			CurrentStateDictionary = persistanceDictionary ?? PhoneApplicationService.Current.State;
+		}
+
+		internal static void StoreStuffToAppropriateStates(object sender, EventArgs e)
 		{
 			if (AppState.GetCurrentAppState == CurrentAppState.Exiting)
 				return;
 
-			var currentApplicationState = PhoneApplicationService.Current.State;
+			var currentApplicationState = CurrentStateDictionary;
 
 			foreach (var tombstoneDataClass in SavedObjects)
 			{
@@ -45,14 +82,29 @@ namespace Where
 							currentApplicationState.Remove(tombstoneDataClass.Key);
 
 						var jsonString = JsonConvert.SerializeObject(data.TombstoneableObject);
-						PhoneApplicationService.Current.State.Add(tombstoneDataClass.Key, jsonString);
+						currentApplicationState.Add(tombstoneDataClass.Key, jsonString);
 					}
 					catch (Exception x)
 					{
 						Debug.WriteLine("Could not deserialize object and save to state: {0}", x.Message);
 					}
 			}
+
+			SavedObjects.Clear();
 		}
+
+
+		#region TombstoneHelpers TestableExtenstions
+
+		internal static void ResetStates()
+		{
+			SavedObjects.Clear();
+			CurrentStateDictionary.Clear();
+		}
+
+
+		#endregion
+
 
 
 		private static readonly IDictionary<string, TombstoneDataClass> SavedObjects = new Dictionary<string, TombstoneDataClass>();
@@ -139,7 +191,7 @@ namespace Where
 
 			if (getDataClass == TombstoneDataClass.Default())
 			{
-				var newDataClass = new TombstoneDataClass(TombstoneTarget.ApplicationState, value, value.GetType().Name, PhoneApplicationService.Current.State);
+				var newDataClass = new TombstoneDataClass(TombstoneTarget.ApplicationState, value, value.GetType().Name, CurrentStateDictionary);
 				SavedObjects.Add(key, newDataClass);
 			}
 			else
@@ -153,7 +205,7 @@ namespace Where
 				{
 					WhereDebug.WriteLine(string.Format("Changing state value and state type for key: \"{0}\"", key));
 					SavedObjects.Remove(key);
-					SavedObjects.Add(key, new TombstoneDataClass(TombstoneTarget.ApplicationState, value, value.GetType().Name, PhoneApplicationService.Current.State));
+					SavedObjects.Add(key, new TombstoneDataClass(TombstoneTarget.ApplicationState, value, value.GetType().Name, CurrentStateDictionary));
 				}
 
 			}
@@ -174,9 +226,9 @@ namespace Where
 				WhereDebug.WriteLine(string.Format("Key {0} doesn't exist!", userKey));
 
 			}
-			else if (PhoneApplicationService.Current.State.DictionaryContainsValue(key))
+			else if (CurrentStateDictionary.DictionaryContainsValue(key))
 			{
-				PhoneApplicationService.Current.State.Remove(key);
+				CurrentStateDictionary.Remove(key);
 			}
 
 			SavedObjects.Remove(key);
@@ -199,10 +251,10 @@ namespace Where
 				SavedObjects.Remove(tombstoneDataClass);
 			}
 
-			var savedList = PhoneApplicationService.Current.State.Where(item => item.Key.StartsWith(pageNamePrefix)).ToList();
+			var savedList = CurrentStateDictionary.Where(item => item.Key.StartsWith(pageNamePrefix)).ToList();
 			foreach (var keyValuePair in savedList)
 			{
-				PhoneApplicationService.Current.State.Remove(keyValuePair);
+				CurrentStateDictionary.Remove(keyValuePair);
 			}
 		}
 
@@ -210,7 +262,7 @@ namespace Where
 		{
 			var pageNameWithPrefix = page.GetType().Name + "_";
 			var hasAny = SavedObjects.Any(value => value.Key.StartsWith(pageNameWithPrefix));
-			var hasAnyState = PhoneApplicationService.Current.State.Any(kvp => kvp.Key.StartsWith(pageNameWithPrefix));
+			var hasAnyState = CurrentStateDictionary.Any(kvp => kvp.Key.StartsWith(pageNameWithPrefix));
 
 			return hasAny || hasAnyState;
 		}
@@ -231,8 +283,23 @@ namespace Where
 			}
 			else
 			{
-				output = RestoreFromStateDirectly<T>(key);
-				SaveObjectToApplicationState(page, pageKey, output);
+				var restoreResult = RestoreFromStateDirectly<T>(key);
+
+				switch (restoreResult.StatusMessage)
+				{
+					case StateRestoreData<T>.ErrorMessage.NoError:
+						SaveObjectToApplicationState(page, pageKey, restoreResult.StatusMessage);
+						output = restoreResult.CurrentValue;
+						break;
+					case StateRestoreData<T>.ErrorMessage.NotFound:
+						output = restoreResult.CurrentValue;
+						break;
+					case StateRestoreData<T>.ErrorMessage.WrongType:
+						throw new NotSupportedException("This is not of a desired type!");
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
 			}
 
 			return output;
@@ -262,7 +329,7 @@ namespace Where
 			{
 				result = true;
 			}
-			else if (PhoneApplicationService.Current.State.ContainsKey(key))
+			else if (CurrentStateDictionary.ContainsKey(key))
 			{
 				result = true;
 			}
@@ -273,35 +340,70 @@ namespace Where
 
 		}
 
-		private static T RestoreFromStateDirectly<T>(string key)
+		private static StateRestoreData<T> RestoreFromStateDirectly<T>(string key)
 		{
-			var dict = PhoneApplicationService.Current.State;
-			T result;
+			var dict = CurrentStateDictionary;
+			StateRestoreData<T> result;
 
 			if (dict.ContainsKey(key))
 			{
 				var getObject = dict[key];
 
 				if (!(getObject is string))
-					result = default(T);
+				{
+					result = new StateRestoreData<T>(StateRestoreData<T>.ErrorMessage.NotFound, default(T));
+				}
 				else
 					try
 					{
 
 						var jsonObject = JsonConvert.DeserializeObject<T>(getObject as string);
-						result = jsonObject;
+						result = new StateRestoreData<T>(StateRestoreData<T>.ErrorMessage.NoError, jsonObject);
 					}
-					catch (Exception)
+					catch (Exception e)
 					{
-						result = default(T);
+						result = new StateRestoreData<T>(StateRestoreData<T>.ErrorMessage.WrongType, default(T));
 					}
 			}
 			else
 			{
-				result = default(T);
+				result = new StateRestoreData<T>(StateRestoreData<T>.ErrorMessage.NotFound, default(T));
 			}
 
+
 			return result;
+		}
+
+		private sealed class StateRestoreData<T>
+		{
+			public enum ErrorMessage
+			{
+				NoError = 0,
+				NotFound,
+				WrongType,
+			}
+
+
+			private readonly T _currentValue;
+			private readonly ErrorMessage _statusMessage;
+
+
+			public StateRestoreData(ErrorMessage statusMessage, T value)
+			{
+				_currentValue = value;
+				_statusMessage = statusMessage;
+			}
+
+
+			public ErrorMessage StatusMessage
+			{
+				get { return _statusMessage; }
+			}
+
+			public T CurrentValue
+			{
+				get { return _currentValue; }
+			}
 		}
 
 	}
