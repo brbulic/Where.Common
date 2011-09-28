@@ -18,6 +18,8 @@ namespace Where.Common
 
 		public bool IsSorted { get; private set; }
 
+		private bool _recalculateHashesAndEquals = true;
+
 
 		/// <summary>
 		///  Uses default checkequals
@@ -25,16 +27,15 @@ namespace Where.Common
 		public BindableFavoritesCollection()
 		{
 			_backingList = (List<T>)Items;
-			_checkEquals = null;
 		}
 
 		/// <summary>
-		/// Create a new collection. You could implement the IEqueatble or use a optional Func to check if elements are equal
+		/// Create a new collection. You could implement the IEquatable or use a optional Func to check if elements are equal
 		/// </summary>
 		/// <param name="checkEquals">Func to check equality</param>
 		public BindableFavoritesCollection(Func<T, T, bool> checkEquals = null)
+			: this()
 		{
-			_backingList = (List<T>)Items;
 			_checkEquals = checkEquals;
 		}
 
@@ -86,6 +87,11 @@ namespace Where.Common
 			return true;
 		}
 
+		/// <summary>
+		/// Remove a <b>item</b> from BindableFavoritesCollection. Returns <b>true</b> if successful!
+		/// </summary>
+		/// <param name="item"></param>
+		/// <returns></returns>
 		public bool RemoveFromFavorites(T item)
 		{
 			var contains = true;
@@ -116,8 +122,10 @@ namespace Where.Common
 
 			LastUsedComparer = comparer;
 			_backingList.Sort(comparer);
+			_recalculateHashesAndEquals = true;
 			Deployment.Current.Dispatcher.BeginInvoke(() => OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)));
 			IsSorted = true;
+			
 		}
 
 		public IEnumerable<T> ReturnInnerCollection()
@@ -144,21 +152,42 @@ namespace Where.Common
 				SortCollection(LastUsedComparer);
 			else
 				OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+		}
 
+
+		protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+		{
+			_recalculateHashesAndEquals = true;
+			base.OnCollectionChanged(e);
 		}
 
 		#region Implementation of IEquatable<BindableFavoritesCollection<T>>
 
+
+		private int _hashCodeCache;
+		
 		public override int GetHashCode()
 		{
-			var itemHashes = Items.Aggregate(string.Empty, (current, itemHash) => String.Format("{0}{1}", current, itemHash));
-			var hashCodeString = string.Format("{0}{1}", Count, itemHashes);
-			return hashCodeString.GetHashCode();
+			if (_recalculateHashesAndEquals)
+			{
+				var itemHashes = Items.Aggregate(string.Empty, (current, itemHash) => String.Format("{0}{1}", current, itemHash));
+				var hashCodeString = string.Format("{0}{1}", Count, itemHashes);
+				_hashCodeCache = hashCodeString.GetHashCode();
+				_recalculateHashesAndEquals = false;
+			}
+			return _hashCodeCache;
 		}
 
 		public bool Equals(BindableFavoritesCollection<T> other)
 		{
 			return GetHashCode().Equals(other.GetHashCode());
+		}
+
+		public override bool Equals(object obj)
+		{
+			var one = GetHashCode();
+			var two = obj.GetHashCode();
+			return one.Equals(two);
 		}
 
 		#endregion

@@ -79,6 +79,7 @@ namespace Where.Common.Mvvm
 						var includesPreviousState = this.ContainsStateElementsForPage();
 						if (includesPreviousState && !_pageActive)
 						{
+							_isTombstone = true;
 							PageViewModel.LoadFromTombstone(this);
 							this.RemoveAllKeysFromPage();
 						}
