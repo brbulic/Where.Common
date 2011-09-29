@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using System.Linq;
 using Where.Common.Messaging;
@@ -7,7 +8,7 @@ using Where.Common.DataController.Interfaces;
 
 namespace Where.Common.DataController
 {
-	public class SuperintendendentBase<TE> : ISuperintendent where TE : class
+	public class SuperintendendentBase<TE> : ISuperintendent where TE : class, INotifyPropertyChanged
 	{
 		private static readonly PropertyInfo[] TypeProperties = typeof(TE).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
@@ -135,8 +136,15 @@ namespace Where.Common.DataController
 			if (foundProp == null)
 				throw new ArgumentOutOfRangeException("propertyName", String.Format("Nonexistant property \"{0}\".", propertyName));
 
-			if (!foundProp.PropertyType.Equals(type))
-				throw new ArgumentOutOfRangeException("type", String.Format("Property \"{0}\" is of a wrong type.", propertyName));
+			if (type != typeof(object))
+				if (!foundProp.PropertyType.Equals(type))
+					throw new ArgumentOutOfRangeException("type", String.Format("Property \"{0}\" is requested for a wrong type.", propertyName));
+		}
+
+		public static Type GetPropertyType(string propertyName)
+		{
+			var foundProp = TypeProperties.Where(property => property.Name.Equals(propertyName)).First();
+			return foundProp.PropertyType;
 		}
 
 		#endregion

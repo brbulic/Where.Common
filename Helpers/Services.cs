@@ -45,12 +45,20 @@ namespace Where
 			get { return WebServiceBase.HasInternetConnectivity; }
 		}
 
+		private static IBackgroundDispatcher _backgroundDispatcherInstance;
+
 		/// <summary>
 		/// Default Background worker
 		/// </summary>
 		public static IBackgroundDispatcher BackgroundWorkerDefault
 		{
-			get { return BackgroundDispatcher.Instance; }
+			get
+			{
+				if (_backgroundDispatcherInstance == null)
+					_backgroundDispatcherInstance = new BackgroundDispatcher();
+
+				return _backgroundDispatcherInstance;
+			}
 		}
 	}
 }

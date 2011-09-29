@@ -41,41 +41,36 @@ namespace Where
 		}
 
 
-		public static TE GetValueFromDictionarySafe<TE>(this IDictionary<string, TE> currentDictionary, string key, object safeHandle, TE defaultValue = default(TE))
+		public static TE GetValueFromDictionary<TE>(this IDictionary<string, TE> currentDictionary, string key, TE defaultValue = default(TE))
 		{
 			TE tempReturn;
-
-			lock (safeHandle)
+			if (currentDictionary.ContainsKey(key))
 			{
-				if (currentDictionary.ContainsKey(key))
-				{
-					tempReturn = currentDictionary[key];
-				}
-				else
-				{
-					tempReturn = !EqualityComparer<TE>.Default.Equals(defaultValue, default(TE)) ? defaultValue : default(TE);
-				}
+				tempReturn = currentDictionary[key];
+			}
+			else
+			{
+				tempReturn = !EqualityComparer<TE>.Default.Equals(defaultValue, default(TE)) ? defaultValue : default(TE);
 			}
 
 			return tempReturn;
 		}
 
-		public static void SetValueInDictionarySafe<TE>(this IDictionary<string, TE> currentDictionary, string key, TE value, object safeHandle)
+		public static void SetValueInDictionary<TE>(this IDictionary<string, TE> currentDictionary, string key, TE value)
 		{
-			lock (safeHandle)
+
+			if (currentDictionary.ContainsKey(key))
 			{
-				if (currentDictionary.ContainsKey(key))
-				{
-					currentDictionary[key] = value;
-				}
-				else
-				{
-					currentDictionary.Add(key, value);
-				}
+				currentDictionary[key] = value;
 			}
+			else
+			{
+				currentDictionary.Add(key, value);
+			}
+
 		}
 
-		public static bool DictionaryContainsValueSafe<TE>(this IDictionary<string, TE> currentDictionary, string key)
+		public static bool DictionaryContainsValue<TE>(this IDictionary<string, TE> currentDictionary, string key)
 		{
 			return currentDictionary.ContainsKey(key);
 		}

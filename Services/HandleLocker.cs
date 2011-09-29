@@ -75,7 +75,7 @@ namespace Where.Common.Services
 
 
 		/// <summary>
-		/// Execute an operation on a locked resource with internal aquire-release and return a result of type <b>TResult</b> (can be void)
+		/// Execute an operation on a locked resource with internal aquire-release and return a result of type <b>TResult</b>. Operation is NOT reentrable
 		/// </summary>
 		/// <typeparam name="TResult"></typeparam>
 		/// <param name="executableAction"></param>

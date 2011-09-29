@@ -24,6 +24,8 @@ namespace Where.Common.Mvvm
 
 		protected bool IsPageLoaded { get; set; }
 
+		private bool _pageActive;
+
 		protected bool AttachDataCalled { get; private set; }
 
 		public PageCommon()
@@ -75,10 +77,11 @@ namespace Where.Common.Mvvm
 				{
 					case CurrentAppState.None:
 						var includesPreviousState = this.ContainsStateElementsForPage();
-						if (includesPreviousState)
+						if (includesPreviousState && !_pageActive)
 						{
-							if (_isTombstone)
-								PageViewModel.LoadFromTombstone(this);
+							_isTombstone = true;
+							PageViewModel.LoadFromTombstone(this);
+							this.RemoveAllKeysFromPage();
 						}
 						break;
 					case CurrentAppState.Starting:
@@ -91,6 +94,7 @@ namespace Where.Common.Mvvm
 						_isTombstone = true;
 						PageViewModel.LoadFromTombstone(this);
 						Application.Current.SetCurrentAppState(CurrentAppState.None);
+						this.RemoveAllKeysFromPage();
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
@@ -99,7 +103,10 @@ namespace Where.Common.Mvvm
 			else
 				Application.Current.SetCurrentAppState(CurrentAppState.None);
 
+			_pageActive = true;
+
 			GC.Collect();
+
 		}
 		
 		protected override void OnNavigatedFrom(NavigationEventArgs e)
