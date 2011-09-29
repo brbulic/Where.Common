@@ -58,6 +58,7 @@
     <Compile Include="Controls\ProfileButton.cs" />
     <Compile Include="Controls\WhereProgressBar.cs" />
     <Compile Include="DataController\Interfaces\IPrivatePoolMember.cs" />
+    <Compile Include="DataController\Interfaces\ISuperintendentDataContainer.cs" />
     <Compile Include="DataController\Interfaces\ISuperintendentDataCore.cs" />
     <Compile Include="DataController\InternalObjectPoolKey.cs" />
     <Compile Include="Helpers\ApiHelpers.cs" />

@@ -18,7 +18,7 @@ namespace Where.Common.DataController
 	/// Default implementation of the ISuperintendentDataCore interface.
 	/// </summary>
 	/// <typeparam name="T">Controlls the instance's properties</typeparam>
-	public class SuperintendentDataController<T> : ISuperintendentDataCore<T> where T : class, INotifyPropertyChanged
+	public class SuperintendentDataController<T> : ISuperintendentDataCore<T> where T : class, ISuperintendentDataContainer
 	{
 
 		/// <summary>
@@ -42,7 +42,13 @@ namespace Where.Common.DataController
 			_persistenceStatus = new HandleLocker<IDictionary<string, DataState>>(new Dictionary<string, DataState>(), _perstistenceStatusLock);
 			_memoryCache = new HandleLocker<IDictionary<string, object>>(new Dictionary<string, object>(), _memoryCacheLock);
 			_currentInstance = instance;
-			//instance.PropertyChanged += OnSomePropertyChanged;
+			instance.PropertyChanged += OnSomePropertyChanged;
+		}
+
+		private void OnSomePropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			SetPersistanceStatusForProperty(e.PropertyName, DataState.PendingWrite);
+			StoreCachedValue(e.PropertyName);
 		}
 
 		private static Type GetPropertyType(string propertyName)
@@ -164,7 +170,6 @@ namespace Where.Common.DataController
 					try
 					{
 						var resultObject = JsonConvert.DeserializeObject<TE>(stringContents);
-						//_persistenceStatus[propertyName] = DataState.Saved;
 						_persistenceStatus.ExecuteSafeOperationOnObject(dict =>
 																			{
 																				dict.SetValueInDictionary(propertyName, DataState.Saved);
@@ -233,8 +238,31 @@ namespace Where.Common.DataController
 			get { return _currentInstance; }
 		}
 
+		public void StoreCachedValue(string propertyName)
+		{
+
+			if (!_currentInstance.Initialized)
+				return;
+
+			var getValue = _memoryCache.ExecuteSafeOperationOnObject(myCachedData => myCachedData.ContainsKey(propertyName) ? myCachedData[propertyName] : null);
+
+			if (getValue != null)
+			{
+				WhereDebug.WriteLine(string.Format("Started saving \"{0}\" from propertyChanged...", propertyName));
+				EnqueueOperation(QueueWorkerItemSave, new BackgroundWorkerData(propertyName, getValue));
+			}
+
+			else
+				WhereDebug.WriteLine(string.Format("Cannot find cached data for writing for property \"{0}\".", propertyName));
+
+		}
+
 		public SuperindententDataObject<TE> RetrieveValue<TE>(string propertyName, TE defaultValue = default(TE))
 		{
+			if (!_currentInstance.Initialized)
+				return new SuperindententDataObject<TE>(SuperintendentStatus.Changed, defaultValue, propertyName);
+
+
 			SuperintendendentBase<T>.ContainsPropertyOfType(typeof(TE), propertyName);
 
 			var retrievalResult = _memoryCache.ExecuteSafeOperationOnObject(cache =>
@@ -401,25 +429,35 @@ namespace Where.Common.DataController
 			var propertyName = data.PropertyName;
 			var value = data.Value;
 
-			var persistenceStatus = GetPersistenceStatusForProperty(propertyName);
+
+			var res = _persistenceStatus.ExecuteSafeOperationOnObject(dict =>
+																		{
+																			var persistenceStatus = dict.GetValueFromDictionary(data.PropertyName);
+																			bool result;
+
+																			if (persistenceStatus == DataState.PendingWrite)
+																			{
+																				//SetPersistanceStatusForProperty
+																				dict.SetValueInDictionary(propertyName, DataState.BeingWritten);
+
+																				var getFileName = GetFileNameForProperty(propertyName);
+																				WhereDebug.WriteLine(string.Format("Saving property \"{0}\" to filename \"{1}\"", propertyName, getFileName));
+																				result = RealSaveOperation(value, getFileName);
+																			}
+																			else
+																			{
+																				throw new InvalidOperationException("How did i get here?");
+																			}
 
 
-			if (persistenceStatus == DataState.PendingWrite)
-			{
-				SetPersistanceStatusForProperty(propertyName, DataState.BeingWritten);
+																			//SetPersistanceStatusForProperty
+																			dict.SetValueInDictionary(propertyName, result ? DataState.Saved : DataState.Empty);
 
-				// These three can run concurrent...
-				var getFileName = GetFileNameForProperty(propertyName);
-				WhereDebug.WriteLine(string.Format("Saving property \"{0}\" to filename \"{1}\"", propertyName, getFileName));
-				var result = RealSaveOperation(value, getFileName);
+																			return result;
+																		});
 
-				// ...but this one must wait for the previous operation to complete.
-				SetPersistanceStatusForProperty(propertyName, result ? DataState.Saved : DataState.Empty);
-			}
-			else
-			{
-				throw new InvalidOperationException("How did i get here?");
-			}
+			Debug.WriteLine("Save operation for \"{0}\" done right? Answer: {1}", propertyName, res);
+
 		}
 
 		#endregion

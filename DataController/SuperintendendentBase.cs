@@ -8,17 +8,17 @@ using Where.Common.DataController.Interfaces;
 
 namespace Where.Common.DataController
 {
-	public class SuperintendendentBase<TE> : ISuperintendent where TE : class, INotifyPropertyChanged
+	public class SuperintendendentBase<TData> : ISuperintendent where TData : class, ISuperintendentDataContainer
 	{
-		private static readonly PropertyInfo[] TypeProperties = typeof(TE).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+		private static readonly PropertyInfo[] TypeProperties = typeof(TData).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-		private readonly ISuperintendentDataCore<TE> _privateDataCore;
+		private readonly ISuperintendentDataCore<TData> _privateDataCore;
 
 		private readonly IMessenger _messengerInstance;
 
 		private readonly IDictionary<string, object> _messengerTokens = new Dictionary<string, object>();
 
-		protected SuperintendendentBase(ISuperintendentDataCore<TE> coreInjector, IMessenger messengerInjector)
+		protected SuperintendendentBase(ISuperintendentDataCore<TData> coreInjector, IMessenger messengerInjector)
 		{
 			_privateDataCore = coreInjector;
 			_messengerInstance = messengerInjector;
@@ -31,6 +31,13 @@ namespace Where.Common.DataController
 			{
 				_messengerTokens.Add(typeProperty.Name, new object());
 			}
+
+			Preinit();
+		}
+
+		public virtual void Preinit()
+		{
+
 		}
 
 		#region Implementation of ISuperintendent

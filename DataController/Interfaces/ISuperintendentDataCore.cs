@@ -1,19 +1,22 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace Where.Common.DataController.Interfaces
 {
 	/// <summary>
 	/// Makes sure everything is in sync.
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public interface ISuperintendentDataCore<T> where T : class
+	/// <typeparam name="TData"></typeparam>
+	public interface ISuperintendentDataCore<TData> where TData : class, ISuperintendentDataContainer
 	{
-		T ControlledInstance { get; }
+		TData ControlledInstance { get; }
 
-		void SaveValue<TE>(string propertyName, TE value);
-		
-		SuperindententDataObject<TE> RetrieveValue<TE>(string propertyName, TE defaultValue = default(TE));
+		void SaveValue<TElement>(string propertyName, TElement value);
 
-		void RetrieveValueAsync<TE>(string propertyName, TE defaultValue, Action<SuperindententDataObject<TE>, object> returns, object state);
+		void StoreCachedValue(string propertyName);
+
+		SuperindententDataObject<TElement> RetrieveValue<TElement>(string propertyName, TElement defaultValue = default(TElement));
+
+		void RetrieveValueAsync<TElement>(string propertyName, TElement defaultValue, Action<SuperindententDataObject<TElement>, object> returns, object state);
 	}
 }
