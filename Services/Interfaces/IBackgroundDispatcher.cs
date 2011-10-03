@@ -17,11 +17,11 @@ namespace Where.Common.Services.Interfaces
         /// <summary>
         /// Dispatches an full, type safe, parametered operation with a result to the background thread with an optional callback.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
         /// <param name="operation">Input function with a result</param>
-        /// <param name="operationData">Data for the operation</param>
+        /// <param name="backgroundOperationData">Data for the operation</param>
         /// <param name="callback">Calls on completed</param> 
-        void QueueOperation<T>(Func<IOperationData, T> operation, IOperationData operationData, OperationCallback<T> callback = null) where T : class;
+        void QueueOperation<TResult>(Func<IBackgroundOperationData, TResult> operation, IBackgroundOperationData backgroundOperationData, OperationCallback<TResult> callback = null) where TResult : class;
 
         /// <summary>
         /// Do a simple, parameterless action on another thread.

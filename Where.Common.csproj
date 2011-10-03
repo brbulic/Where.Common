@@ -117,10 +117,13 @@
     <Compile Include="Services\HandleLocker.cs" />
     <Compile Include="Services\Interfaces\IBackgroundDispatcher.cs" />
     <Compile Include="Services\Interfaces\ICacheService.cs" />
-    <Compile Include="Services\Interfaces\IOperationData.cs" />
+    <Compile Include="Services\Interfaces\IBackgroundOperationData.cs" />
     <Compile Include="Diagnostics\WhereDebugService.cs" />
+    <Compile Include="Services\Interfaces\IThreadObjectQueue.cs" />
     <Compile Include="Services\Interfaces\IWebService.cs" />
-    <Compile Include="Services\ThreadObjectQueue.cs" />
+    <Compile Include="Services\BlockingThreadObjectQueue.cs" />
+    <Compile Include="Services\NewThreadObjectQueue.cs" />
+    <Compile Include="Services\Interfaces\QueueResult.cs" />
     <Compile Include="Services\WebService.cs" />
     <Compile Include="Services\WebServiceBase.cs" />
     <Compile Include="Services\WhereService.cs" />

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Reflection;
 using System.Security;
 using System.Threading;
 using System.Windows;
+using System.Windows.Threading;
 using Newtonsoft.Json;
 using Where.Common.DataController.Interfaces;
 using Where.Common.Diagnostics;
@@ -27,27 +27,53 @@ namespace Where.Common.DataController
 		[SecurityCritical]
 		private readonly HandleLocker<IDictionary<string, object>> _memoryCache;
 
-		private readonly HandleLocker<IDictionary<string, DataState>> _persistenceStatus;
+		private readonly HandleLocker<IDictionary<string, PerstistenceState>> _persistenceStatus;
 
 		private readonly IDictionary<string, string> _fileNameCache = new Dictionary<string, string>();
 
 		private readonly string _currentControlledDataDirectory = DataControllerConfig.CreateDataDirectoryFromControlledData(typeof(T));
 
-		private readonly IBackgroundDispatcher _serializerWorker = new BackgroundDispatcher();
+		private readonly IThreadObjectQueue<BackgroundWorkerData> _writerQueuer;
 
 		private readonly T _currentInstance;
 
+
+		#region Scheduled writer
+
+		private readonly Dictionary<String, object> _pendingWriting = new Dictionary<string, object>();
+
+		private readonly DispatcherTimer _timer = new DispatcherTimer();
+
+		#endregion
+
 		public SuperintendentDataController(T instance)
 		{
-			_persistenceStatus = new HandleLocker<IDictionary<string, DataState>>(new Dictionary<string, DataState>(), _perstistenceStatusLock);
-			_memoryCache = new HandleLocker<IDictionary<string, object>>(new Dictionary<string, object>(), _memoryCacheLock);
+			_persistenceStatus = new HandleLocker<IDictionary<string, PerstistenceState>>(new Dictionary<string, PerstistenceState>(), new object());
+			_memoryCache = new HandleLocker<IDictionary<string, object>>(new Dictionary<string, object>(), new object());
+			_writerQueuer = new NewThreadObjectQueue<BackgroundWorkerData>();
+
+			Deployment.Current.Dispatcher.BeginInvoke(() =>
+														{
+															_timer.Tick += Executor;
+															_timer.Interval = TimeSpan.FromSeconds(15);
+															_timer.Start();
+
+															Application.Current.Exit += SuperintendentSignsOff;
+														});
+
 			_currentInstance = instance;
 			instance.PropertyChanged += OnSomePropertyChanged;
 		}
 
+		void SuperintendentSignsOff(object sender, EventArgs e)
+		{
+			_timer.Stop();
+			_onExit = true;
+			Executor(null, null); // Write all pending objects
+		}
+
 		private void OnSomePropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
-			SetPersistanceStatusForProperty(e.PropertyName, DataState.PendingWrite);
 			StoreCachedValue(e.PropertyName);
 		}
 
@@ -59,16 +85,6 @@ namespace Where.Common.DataController
 		#region Private helpers
 
 		#region FileName Cache
-
-		/// <summary>
-		/// Get a file name by PropertyInfo
-		/// </summary>
-		/// <param name="property"></param>
-		/// <returns></returns>
-		private string GetFileNameForProperty(MemberInfo property)
-		{
-			return GetFileNameForProperty(property.Name);
-		}
 
 		/// <summary>
 		/// Get a file name by propertyName
@@ -93,10 +109,9 @@ namespace Where.Common.DataController
 			return fileNameCache;
 		}
 
-
 		#endregion
 
-		private static bool RealSaveOperation(object state, string filename)
+		private bool JsonSerializationAndPersistence(object state, string filename)
 		{
 			string jsonString = string.Empty;
 			int retries = 0;
@@ -111,123 +126,51 @@ namespace Where.Common.DataController
 				catch (Exception)
 				{
 					retries++;
-					Debug.WriteLine("Save operation failed. Making a retry: ({0})", retries);
+					Debug.WriteLine("=====> SuperintendentDataCore: Save operation failed. Making a retry: ({0})", retries);
 				}
 			}
 
-			IsolatedStorageStringWriter.GetWriter.WriteStringToFile(jsonString, filename);
+			if (!_onExit)
+				IsolatedStorageStringWriter.GetWriter.BeginWriteStringToFile(jsonString, filename);
+			else
+				IsolatedStorageStringWriter.GetWriter.WriteStringToFileSync(jsonString, filename);
+
 
 			return retries < 3 && !string.IsNullOrEmpty(filename);
 		}
 
-		#region Memory cache operators
-
-		private readonly object _memoryCacheLock = new object();
-
-		#endregion
-
-		#region Property persistence status operators
-
-		private readonly object _perstistenceStatusLock = new object();
-
 
 		#region getter operations
-
-		private DataState GetPersistenceStatusForProperty(string propertyName)
-		{
-			var fileName = GetFileNameForProperty(propertyName);
-
-			var resultMe = _persistenceStatus.ExecuteSafeOperationOnObject(dict =>
-			{
-				var stateResult = dict.GetValueFromDictionary(propertyName);
-
-				if (stateResult == DataState.Unknown)
-				{
-					var result = IsolatedStorageBase.FileExists(fileName);
-					stateResult = result ? DataState.Saved : DataState.Empty;
-				}
-
-				return stateResult;
-			});
-
-			return resultMe;
-		}
 
 		private SuperindententDataObject<TE> GrabFromJson<TE>(string propertyName)
 		{
 			var fileNameString = GetFileNameForProperty(propertyName);
 			var stringContents = IsolatedStorageStringWriter.GetWriter.ReadStringFromIsolatedStorage(fileNameString);
 
-			SuperindententDataObject<TE> result;
-			var persistState = GetPersistenceStatusForProperty(propertyName);
 
-			switch (persistState)
+			if (stringContents == null)
+				return new SuperindententDataObject<TE>(SuperintendentStatus.DataNotFound, default(TE), propertyName);
+
+
+			SuperindententDataObject<TE> resultObject;
+
+			try
 			{
-				case DataState.Empty:
-					result = new SuperindententDataObject<TE>(SuperintendentStatus.NeedsReload, default(TE), propertyName);
-					break;
-				case DataState.Saved:
-					try
-					{
-						var resultObject = JsonConvert.DeserializeObject<TE>(stringContents);
-						_persistenceStatus.ExecuteSafeOperationOnObject(dict =>
-																			{
-																				dict.SetValueInDictionary(propertyName, DataState.Saved);
-																				return true;
-																			});
-						result = new SuperindententDataObject<TE>(SuperintendentStatus.StatusOk, resultObject, propertyName);
-					}
-					catch (Exception e)
-					{
-						result = new SuperindententDataObject<TE>(SuperintendentStatus.DataNotFound, default(TE), propertyName);
-						Utils.ErrorLogInstance.AddError("GrabFromJsonSDC", e.Message);
-					}
-					break;
-				case DataState.PendingWrite:
-				case DataState.BeingWritten:
-					result = new SuperindententDataObject<TE>(SuperintendentStatus.IsReloading, default(TE), propertyName);
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
+				var result = JsonConvert.DeserializeObject<TE>(stringContents);
+				resultObject = new SuperindententDataObject<TE>(SuperintendentStatus.StatusOk, result, propertyName);
+			}
+			catch (Exception e)
+			{
+				resultObject = new SuperindententDataObject<TE>(SuperintendentStatus.DataNotFound, default(TE), propertyName);
+				Utils.ErrorLogInstance.AddError("GrabFromJsonSDC", e.Message);
+
 			}
 
-			return result;
+			// Basically that's it
+			return resultObject;
 		}
 
 		#endregion
-
-
-		#region Setter operations
-
-		private void SetPersistanceStatusForProperty(string propertyName, DataState state)
-		{
-			var get = GetPersistenceStatusForProperty(propertyName);
-
-			if (get != state)
-			{
-				_persistenceStatus.ExecuteSafeOperationOnObject(dict =>
-				{
-					if (dict.ContainsKey(propertyName))
-					{
-						dict[propertyName] = state;
-
-					}
-					else
-					{
-						dict.Add(propertyName, state);
-					}
-
-					return true;
-				});
-			}
-
-		}
-
-		#endregion
-
-
-		#endregion
-
 
 		#endregion
 
@@ -248,8 +191,8 @@ namespace Where.Common.DataController
 
 			if (getValue != null)
 			{
-				WhereDebug.WriteLine(string.Format("Started saving \"{0}\" from propertyChanged...", propertyName));
-				EnqueueOperation(QueueWorkerItemSave, new BackgroundWorkerData(propertyName, getValue));
+				WhereDebug.WriteLine(string.Format("=====> SuperintendentDataCore: Started saving \"{0}\" from propertyChanged...", propertyName));
+				EnqueueWriteValue(propertyName, getValue);
 			}
 
 			else
@@ -257,62 +200,73 @@ namespace Where.Common.DataController
 
 		}
 
+		private bool JsonExists(string propertyName)
+		{
+			var filename = GetFileNameForProperty(propertyName);
+			return IsolatedStorageBase.FileExists(filename);
+		}
+
 		public SuperindententDataObject<TE> RetrieveValue<TE>(string propertyName, TE defaultValue = default(TE))
 		{
 			if (!_currentInstance.Initialized)
 				return new SuperindententDataObject<TE>(SuperintendentStatus.Changed, defaultValue, propertyName);
 
+			var result = RetrieveFromLocalCache(propertyName, defaultValue);
 
-			SuperintendendentBase<T>.ContainsPropertyOfType(typeof(TE), propertyName);
-
-			var retrievalResult = _memoryCache.ExecuteSafeOperationOnObject(cache =>
-														{
-															if (cache.ContainsKey(propertyName))
-															{
-																var tempResult = cache[propertyName];
-																return new SuperindententDataObject<TE>(SuperintendentStatus.StatusOk, (TE)tempResult, propertyName);
-															}
-
-															return SuperindententDataObject<TE>.Default();
-
-														});
-
-			if (retrievalResult != SuperindententDataObject<TE>.Default())
-			{
-				return retrievalResult;
-			}
-
-			/* this is from json*/
-
-			var result = GrabFromJson<TE>(propertyName);
-			var resultStatus = result.CurrentObjectStatus;
-
-			switch (resultStatus)
+			switch (result.CurrentObjectStatus)
 			{
 				case SuperintendentStatus.StatusOk:
-					_memoryCache.ExecuteSafeOperationOnObject(dict =>
-																{
-																	dict.SetValueInDictionary(propertyName, result.Value);
-																	return true;
-																});
-					WhereDebug.WriteLine(string.Format("~ SuperintendentDataController REPORTS: Retrieving property \"{0}\"'s value from JSON. Future retrieves will go to memory.", propertyName));
-					break;
+					return result;
 				case SuperintendentStatus.Changed:
-					if (!EqualityComparer<TE>.Default.Equals(defaultValue, default(TE)))
-					{
-						SaveValue(propertyName, defaultValue);
-						result = new SuperindententDataObject<TE>(SuperintendentStatus.StatusOk, defaultValue, propertyName);
-					}
-					break;
 				case SuperintendentStatus.NeedsReload:
-				case SuperintendentStatus.IsReloading:
-					result = new SuperindententDataObject<TE>(resultStatus, defaultValue, propertyName);
-					break;
+					break; // Let's see if json has it...
 				default:
 					throw new ArgumentOutOfRangeException();
 			}
 
+
+			if (!JsonExists(propertyName))
+			{
+				EnqueueWriteValue(propertyName, result.Value); // JSON doesn't exist, but default value does. Saves new value to json
+				return new SuperindententDataObject<TE>(SuperintendentStatus.StatusOk, result.Value, propertyName);
+			}
+
+			// Retrieve value from JSON
+			result = GrabFromJson<TE>(propertyName);
+			if (result.CurrentObjectStatus == SuperintendentStatus.StatusOk)
+			{
+				Debug.WriteLine("=====> SuperintendentDataCore: JSON of property \"{0}\" exists, retrieving from IsolatedStorage (should happen only once).", propertyName);
+				_memoryCache.ExecuteSafeOperationOnObject(dict =>
+															{
+																dict.SetValueInDictionary(propertyName, result.Value);
+																return true;
+															});
+			}
+
 			return result;
+		}
+
+
+		private SuperindententDataObject<TValue> RetrieveFromLocalCache<TValue>(string propertyName, TValue defaultValue = default(TValue))
+		{
+			var value = _memoryCache.ExecuteSafeOperationOnObject(dictionary =>
+														{
+															if (dictionary.ContainsKey(propertyName))
+															{
+																var cachedValue = (TValue)dictionary[propertyName];
+																return new SuperindententDataObject<TValue>(SuperintendentStatus.StatusOk, cachedValue, propertyName);
+															}
+
+															if (EqualityComparer<TValue>.Default.Equals(default(TValue), defaultValue))
+															{	// defaultValue is empty
+																return new SuperindententDataObject<TValue>(SuperintendentStatus.NeedsReload, defaultValue, propertyName);
+															}
+
+															dictionary.Add(propertyName, defaultValue);
+															return new SuperindententDataObject<TValue>(SuperintendentStatus.Changed, defaultValue, propertyName);
+														});
+
+			return value;
 		}
 
 		public void RetrieveValueAsync<TE>(string propertyName, TE defaultValue, Action<SuperindententDataObject<TE>, object> returns, object state)
@@ -329,45 +283,69 @@ namespace Where.Common.DataController
 											});
 		}
 
-		private void EnqueueOperation(Action<object> action, BackgroundWorkerData data)
+		#endregion
+
+		#region Writer queues and serializables
+
+		private volatile bool _onExit;
+
+		private void EnqueueWriteValue(string propertyName, object dataValues)
 		{
-			_serializerWorker.QueueSimple(action, data);
-		}
-
-
-		private static bool SaveToCache<TE>(HandleLocker<IDictionary<string, TE>> locker, string key, TE value)
-		{
-			return locker.ExecuteSafeOperationOnObject(dict =>
-													{
-														if (dict.ContainsKey(key))
+			Deployment.Current.Dispatcher.BeginInvoke(() =>
 														{
-															dict[key] = value;
-														}
-														else
-														{
-															dict.Add(key, value);
-														}
-
-														return true;
-													});
-		}
-
-		private static TE GetSafeCopy<TE>(HandleLocker<IDictionary<string, TE>> locker, string key)
-		{
-			return locker.ExecuteSafeOperationOnObject(dict =>
-														{
-
-															var tempObject = default(TE);
-
-															if (dict.ContainsKey(key))
-															{
-																tempObject = dict[key];
-															}
-
-															return tempObject;
+															if (_pendingWriting.ContainsKey(propertyName))
+																_pendingWriting[propertyName] = dataValues;
+															else
+																_pendingWriting.Add(propertyName, dataValues);
 														});
+
+			_persistenceStatus.ExecuteSafeOperationOnObject(value =>
+																{
+																	var before = value.GetValueFromDictionary(propertyName);
+																	if (before == PerstistenceState.Saved || before == PerstistenceState.Unknown)
+																		value.SetValueInDictionary(propertyName, PerstistenceState.PendingWrite);
+																	return true;
+																});
 		}
 
+		private void Executor(object sender, EventArgs eventArgs)
+		{
+			foreach (var kvp in _pendingWriting)
+			{
+				if (!_onExit)
+				{
+					var data = new BackgroundWorkerData(kvp.Key, kvp.Value);
+					Predicate<BackgroundWorkerData> runner = val => val.PropertyName == data.PropertyName;
+
+					if (_writerQueuer.OperationPending(runner))
+						_writerQueuer.CancelOperation(runner);
+
+					if (_writerQueuer.OperationRunning(runner))
+						return;
+
+					_writerQueuer.EnqueueOperation(WriterActionExecuter, OnResult, data);
+				}
+				else
+				{
+					var jsonString = JsonConvert.SerializeObject(kvp.Value);
+					IsolatedStorageStringWriter.GetWriter.WriteStringToFileSync(jsonString, GetFileNameForProperty(kvp.Key));
+				}
+			}
+
+			_pendingWriting.Clear();
+
+		}
+
+		private void OnResult(Guid arg1, QueueResult<PerstistenceState> arg2)
+		{
+			_persistenceStatus.ExecuteSafeOperationOnObject(dict =>
+																{
+																	var propertyName = (String)arg2.Request.TransferObject;
+																	dict.SetValueInDictionary(propertyName, arg2.Result);
+																	Debug.WriteLine("Save operation for \"{0}\" done right? Answer: {1}", propertyName, arg2.Result);
+																	return true;
+																});
+		}
 
 		public void SaveValue<TE>(string propertyName, TE value)
 		{
@@ -384,22 +362,52 @@ namespace Where.Common.DataController
 
 			}
 
-
-			var getPersistanceState = GetPersistenceStatusForProperty(propertyName);
-			if (getPersistanceState == DataState.PendingWrite)
-				return;
-
-			SetPersistanceStatusForProperty(propertyName, DataState.PendingWrite);
 			_memoryCache.ExecuteSafeOperationOnObject(dict =>
-														{
-															dict.SetValueInDictionary(propertyName, value);
-															return true;
-														});
+			{
+				dict.SetValueInDictionary(propertyName, value);
+				return true;
+			});
 
-			EnqueueOperation(QueueWorkerItemSave, new BackgroundWorkerData(propertyName, value));
+			EnqueueWriteValue(propertyName, value);
+
 		}
 
-		private sealed class BackgroundWorkerData
+		private PerstistenceState WriterActionExecuter(BackgroundWorkerData obj)
+		{
+			var data = obj;
+			var propertyName = data.PropertyName;
+			var value = data.Value;
+
+			var res = _persistenceStatus.ExecuteSafeOperationOnObject(
+				dict =>
+				{
+
+					var persistenceStatus = dict.GetValueFromDictionary(data.PropertyName);
+					bool result;
+
+					if (persistenceStatus == PerstistenceState.PendingWrite)
+					{
+						dict.SetValueInDictionary(propertyName, PerstistenceState.BeingWritten);
+
+						var getFileName = GetFileNameForProperty(propertyName);
+						WhereDebug.WriteLine(string.Format("Saving property \"{0}\" to filename \"{1}\"", propertyName, getFileName));
+						result = JsonSerializationAndPersistence(value, getFileName);
+					}
+					else
+					{
+						throw new InvalidOperationException("How did i get here?");
+					}
+
+
+					var dsResult = result ? PerstistenceState.Saved : PerstistenceState.Empty;
+					return dsResult;
+				});
+
+			return res;
+		}
+
+
+		private sealed class BackgroundWorkerData : IQueueOperationData
 		{
 			private readonly string _propertyName;
 			private readonly object _value;
@@ -419,46 +427,28 @@ namespace Where.Common.DataController
 			{
 				get { return _propertyName; }
 			}
+
+			public override int GetHashCode()
+			{
+				return PropertyName.GetHashCode();
+			}
+
+			public override bool Equals(object obj)
+			{
+				return GetHashCode().Equals(obj.GetHashCode());
+			}
+
+			#region Implementation of IQueueOperationData
+
+			public object TransferObject
+			{
+				get { return _propertyName; }
+			}
+
+			#endregion
 		}
 
 
-		private void QueueWorkerItemSave(object state)
-		{
-			var data = (BackgroundWorkerData)state;
-
-			var propertyName = data.PropertyName;
-			var value = data.Value;
-
-
-			var res = _persistenceStatus.ExecuteSafeOperationOnObject(dict =>
-																		{
-																			var persistenceStatus = dict.GetValueFromDictionary(data.PropertyName);
-																			bool result;
-
-																			if (persistenceStatus == DataState.PendingWrite)
-																			{
-																				//SetPersistanceStatusForProperty
-																				dict.SetValueInDictionary(propertyName, DataState.BeingWritten);
-
-																				var getFileName = GetFileNameForProperty(propertyName);
-																				WhereDebug.WriteLine(string.Format("Saving property \"{0}\" to filename \"{1}\"", propertyName, getFileName));
-																				result = RealSaveOperation(value, getFileName);
-																			}
-																			else
-																			{
-																				throw new InvalidOperationException("How did i get here?");
-																			}
-
-
-																			//SetPersistanceStatusForProperty
-																			dict.SetValueInDictionary(propertyName, result ? DataState.Saved : DataState.Empty);
-
-																			return result;
-																		});
-
-			Debug.WriteLine("Save operation for \"{0}\" done right? Answer: {1}", propertyName, res);
-
-		}
 
 		#endregion
 	}

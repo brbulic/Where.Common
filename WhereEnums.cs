@@ -69,7 +69,7 @@ namespace Where.Common
 	/// <summary>
 	/// Signalls the stati of the property
 	/// </summary>
-	public enum DataState
+	public enum PerstistenceState
 	{
 		/// <summary>
 		///  No status. Default value. Signals an framework failure.

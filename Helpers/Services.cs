@@ -55,7 +55,7 @@ namespace Where
 			get
 			{
 				if (_backgroundDispatcherInstance == null)
-					_backgroundDispatcherInstance = new BackgroundDispatcher();
+					_backgroundDispatcherInstance = new BackgroundDispatcher(new NewThreadObjectQueue<IBackgroundOperationData>());
 
 				return _backgroundDispatcherInstance;
 			}

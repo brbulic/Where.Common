@@ -16,9 +16,9 @@ namespace Where.Common.Services
 
 		#region Queues and collections
 
-		private readonly ThreadObjectQueue<DoubleQueueRequestData> _primaryWorker;
+		private readonly BlockingThreadObjectQueue<DoubleQueueRequestData> _primaryWorker;
 
-		private readonly ThreadObjectQueue<DoubleQueueRequestData> _secondaryWorker;
+		private readonly BlockingThreadObjectQueue<DoubleQueueRequestData> _secondaryWorker;
 
 
 		#endregion
@@ -50,10 +50,10 @@ namespace Where.Common.Services
 		private WebService()
 		{
 			_isRunning = true;
-			_primaryWorker = new ThreadObjectQueue<DoubleQueueRequestData>(StartApiOperation, WhatToDoOnFail, RunWhile);
+			_primaryWorker = new BlockingThreadObjectQueue<DoubleQueueRequestData>(StartApiOperation, WhatToDoOnFail, RunWhile);
 			_primaryWorker.StartOperation();
 
-			_secondaryWorker = new ThreadObjectQueue<DoubleQueueRequestData>(StartApiOperation, WhatToDoOnFail, RunWhile);
+			_secondaryWorker = new BlockingThreadObjectQueue<DoubleQueueRequestData>(StartApiOperation, WhatToDoOnFail, RunWhile);
 			_secondaryWorker.StartOperation();
 
 			Deployment.Current.Dispatcher.BeginInvoke(() => Application.Current.Exit += ApplicationExit);

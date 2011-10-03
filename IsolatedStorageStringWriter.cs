@@ -21,7 +21,7 @@ namespace Where.Common
 		}
 
 
-		public void WriteStringToFile(String contents, String file)
+		public void BeginWriteStringToFile(String contents, String file)
 		{
 			Action createDerivation = () =>
 			{
@@ -31,9 +31,15 @@ namespace Where.Common
 			};
 
 
-			Debug.WriteLine("Enqueuing write operation for file \"{0}\"", file);
+			Debug.WriteLine("Enqueuing write operation for file \"{0}\"...", file);
 			Utils.BackgroundWorkerDefault.QueueSimple(createDerivation);
 
+		}
+
+		public void WriteStringToFileSync(String contents, String file)
+		{
+			Debug.WriteLine("Writing file \"{0}\" to isolated storage...", file);
+			WriteStringToFileReal(contents, file);
 		}
 
 		private static void WriteStringToFileReal(String contents, String file)

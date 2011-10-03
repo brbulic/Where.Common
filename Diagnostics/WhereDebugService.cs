@@ -6,97 +6,126 @@ using Where.Common.Services.Interfaces;
 
 namespace Where.Common.Diagnostics
 {
-    internal class WhereDebugService : WhereService<WhereDebugService.DebugWorkerData>
-    {
-        private readonly ApiDebug _apiDebug;
+	internal class WhereDebugService : WhereService<WhereDebugService.DebugWorkerData>
+	{
+		private readonly ApiDebug _apiDebug;
 
-        private readonly ManualResetEvent _event;
+		private readonly ManualResetEvent _event;
 
-        private static WhereDebugService _currentInstance;
-        internal static WhereDebugService Instance
-        {
-            get { return _currentInstance ?? (_currentInstance = new WhereDebugService()); }
-        }
+		private static WhereDebugService _currentInstance;
+		internal static WhereDebugService Instance
+		{
+			get { return _currentInstance ?? (_currentInstance = new WhereDebugService()); }
+		}
 
-        public bool EnableOnlineDebugging { get; private set; }
+		public bool EnableOnlineDebugging { get; private set; }
 
-        private WhereDebugService()
-        {
-            _apiDebug = new ApiDebug(Callback);
-            _event = new ManualResetEvent(false);
-            UseCallback = false;
-        }
+		private WhereDebugService()
+		{
+			_apiDebug = new ApiDebug(Callback);
+			_event = new ManualResetEvent(false);
+			UseCallback = false;
+		}
 
-        internal void BeginRemoteDebug()
-        {
-            EnableOnlineDebugging = true;
-        }
+		internal void BeginRemoteDebug()
+		{
+			EnableOnlineDebugging = true;
+		}
 
-        internal void SendDebugMessage(string user, string text)
-        {
-            var data = new DebugWorkerData(user, text);
-            var opData = new BackgroundOperationData(OperationPriority.Normal, data);
-            DispatchOperation(opData);
-        }
+		private class DebugOperationData : IBackgroundOperationData
+		{
+			private readonly OperationPriority _priority;
+			private readonly object _obj;
 
-        internal sealed class DebugWorkerData
-        {
-            private readonly string _user;
-            private readonly string _tekst;
+			public DebugOperationData(OperationPriority priority, object obj)
+			{
+				_priority = priority;
+				_obj = obj;
+			}
 
-            public DebugWorkerData(string user, string tekst)
-            {
-                _user = user;
-                _tekst = tekst;
-            }
+			#region Implementation of IQueueOperationData
 
-            public string Tekst
-            {
-                get { return _tekst; }
-            }
+			public object TransferObject
+			{
+				get { return _obj; }
+			}
 
-            public string User
-            {
-                get { return _user; }
-            }
-        }
+			#endregion
 
-        #region Overrides of WhereService
+			#region Implementation of IBackgroundOperationData
 
-        protected override DebugWorkerData QueuedOperation(IOperationData operationData)
-        {
-            var currentWorkerData = (DebugWorkerData)operationData.UserState;
+			public OperationPriority Priority
+			{
+				get { return _priority; }
+			}
 
-            _event.Reset();
-            _apiDebug.DebugAdd(currentWorkerData.User, currentWorkerData.Tekst);
-            var result = _event.WaitOne(TimeSpan.FromSeconds(10));
+			#endregion
+		}
 
-            if (!result)
-                Debug.WriteLine("Error sending data!");
+		internal void SendDebugMessage(string user, string text)
+		{
+			var data = new DebugWorkerData(user, text);
+			DispatchOperation(new DebugOperationData(OperationPriority.Normal, data));
+		}
+
+		internal sealed class DebugWorkerData
+		{
+			private readonly string _user;
+			private readonly string _tekst;
+
+			public DebugWorkerData(string user, string tekst)
+			{
+				_user = user;
+				_tekst = tekst;
+			}
+
+			public string Tekst
+			{
+				get { return _tekst; }
+			}
+
+			public string User
+			{
+				get { return _user; }
+			}
+		}
+
+		#region Overrides of WhereService
+
+		protected override DebugWorkerData QueuedOperation(IBackgroundOperationData backgroundOperationData)
+		{
+			var currentWorkerData = (DebugWorkerData)backgroundOperationData.TransferObject;
+
+			_event.Reset();
+			_apiDebug.DebugAdd(currentWorkerData.User, currentWorkerData.Tekst);
+			var result = _event.WaitOne(TimeSpan.FromSeconds(10));
+
+			if (!result)
+				Debug.WriteLine("Error sending data!");
 
 
-            return currentWorkerData;
-        }
+			return currentWorkerData;
+		}
 
-        protected override void ServiceCallback(DebugWorkerData returnedData)
-        {
-            return;
-        }
+		protected override void ServiceCallback(DebugWorkerData returnedData)
+		{
+			return;
+		}
 
-        public override void EnqueueOperation()
-        {
-            throw new NotImplementedException();
-        }
+		public override void EnqueueOperation()
+		{
+			throw new NotImplementedException();
+		}
 
-        #endregion
+		#endregion
 
-        private void Callback(bool error, object o)
-        {
-            _event.Set();
-            
-            if (error)
-                Debug.WriteLine("Error sending Debug Message");
+		private void Callback(bool error, object o)
+		{
+			_event.Set();
 
-        }
-    }
+			if (error)
+				Debug.WriteLine("Error sending Debug Message");
+
+		}
+	}
 }

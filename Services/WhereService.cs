@@ -14,7 +14,7 @@ namespace Where.Common.Services
         /// Dispatch an Operation to the BackgroundDispatcher
         /// </summary>
         /// <param name="data"></param>
-        protected void DispatchOperation(IOperationData data)
+        protected void DispatchOperation(IBackgroundOperationData data)
         {
             OperationCallback<T> op = null;
             if (UseCallback)
@@ -23,7 +23,7 @@ namespace Where.Common.Services
             Utils.BackgroundWorkerDefault.QueueOperation(QueuedOperation, data, op);
         }
 
-        protected abstract T QueuedOperation(IOperationData operationData);
+        protected abstract T QueuedOperation(IBackgroundOperationData backgroundOperationData);
 
         protected virtual void ServiceCallback(T returnedData)
         {

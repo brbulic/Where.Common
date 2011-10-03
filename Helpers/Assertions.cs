@@ -93,6 +93,16 @@ namespace Where
 		}
 
 
+#if DEBUG
+
+		public static void ThrowBreakpointForPredicate(bool predicate)
+		{
+			Debug.Assert(!predicate);
+		}
+
+#endif
+
+
 
 	}
 }

@@ -92,7 +92,7 @@ namespace Where.Common.DataController
 
 		public void SetValue<T>(string key, T value)
 		{
-			var oldValue = _privateDataCore.RetrieveValue<T>(key);
+			var oldValue = _privateDataCore.RetrieveValue(key, value);
 
 			if (!EqualityComparer<T>.Default.Equals(oldValue.Value, value))
 			{
