@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading;
 using Where.Common.Services;
 using Where.Common.Services.Interfaces;
 
@@ -8,9 +7,8 @@ namespace Where.Common.Diagnostics
 {
 	internal class WhereDebugService : WhereService<WhereDebugService.DebugWorkerData>
 	{
-		private readonly ApiDebug _apiDebug;
 
-		private readonly ManualResetEvent _event;
+		private readonly ApiDebug _apiDebug;
 
 		private static WhereDebugService _currentInstance;
 		internal static WhereDebugService Instance
@@ -22,8 +20,7 @@ namespace Where.Common.Diagnostics
 
 		private WhereDebugService()
 		{
-			_apiDebug = new ApiDebug(Callback);
-			_event = new ManualResetEvent(false);
+			_apiDebug = new ApiDebug();
 			UseCallback = false;
 		}
 
@@ -95,15 +92,7 @@ namespace Where.Common.Diagnostics
 		protected override DebugWorkerData QueuedOperation(IBackgroundOperationData backgroundOperationData)
 		{
 			var currentWorkerData = (DebugWorkerData)backgroundOperationData.TransferObject;
-
-			_event.Reset();
-			_apiDebug.DebugAdd(currentWorkerData.User, currentWorkerData.Tekst);
-			var result = _event.WaitOne(TimeSpan.FromSeconds(10));
-
-			if (!result)
-				Debug.WriteLine("Error sending data!");
-
-
+			_apiDebug.DebugAdd(currentWorkerData.User, currentWorkerData.Tekst, Callback);
 			return currentWorkerData;
 		}
 
@@ -119,13 +108,13 @@ namespace Where.Common.Diagnostics
 
 		#endregion
 
+		private static readonly string Tag = typeof(WhereDebugService).Name;
+
 		private void Callback(bool error, object o)
 		{
-			_event.Set();
+			if (!error) return;
 
-			if (error)
-				Debug.WriteLine("Error sending Debug Message");
-
+			Debug.WriteLine("Error sending debug message! Error:{0}", o);
 		}
 	}
 }
