@@ -35,52 +35,52 @@ namespace Where
 		/// <param name="sleepAfter">Elements to add before sleeping for a <b>sleep</b> amount of time.</param>
 		public static void AddElementsToObservableCollection<T>(IEnumerable<T> source, ObservableCollection<T> destination, int sleep = 35, int sleepAfter = 0)
 		{
-			BackgroundWorkerDefault.QueueSimple(state =>
-														{
-															var enumerable = (IEnumerable<T>)state;
-															var currentElement = 0;
-															foreach (var element in enumerable)
-															{
-																var dumb = element;
-																Deployment.Current.Dispatcher.BeginInvoke(() => destination.Add(dumb));
-																currentElement++;
+			//BackgroundWorkerDefault.QueueSimple(state =>
+			//                                            {
+			//                                                var enumerable = (IEnumerable<T>)state;
+			//                                                var currentElement = 0;
+			//                                                foreach (var element in enumerable)
+			//                                                {
+			//                                                    var dumb = element;
+			//                                                    Deployment.Current.Dispatcher.BeginInvoke(() => destination.Add(dumb));
+			//                                                    currentElement++;
 
-																if (sleepAfter > 0)
-																{
-																	if (currentElement % sleepAfter == 0)
-																		Thread.Sleep(sleep);
-																}
-																else
-																{
-																	Thread.Sleep(sleep);
-																}
-															}
-														}, source);
-
-
-			//ThreadPool.QueueUserWorkItem(state =>
-			//{
-			//    var enumerable = (IEnumerable<T>)state;
-			//    var currentElement = 0;
-			//    foreach (var element in enumerable)
-			//    {
-			//        var dumb = element;
-			//        Deployment.Current.Dispatcher.BeginInvoke(() => destination.Add(dumb));
-			//        currentElement++;
-
-			//        if (sleepAfter > 0)
-			//        {
-			//            if (currentElement % sleepAfter == 0)
-			//                Thread.Sleep(sleep);
-			//        }
-			//        else
-			//        {
-			//            Thread.Sleep(sleep);
-			//        }
-			//    }
+			//                                                    if (sleepAfter > 0)
+			//                                                    {
+			//                                                        if (currentElement % sleepAfter == 0)
+			//                                                            Thread.Sleep(sleep);
+			//                                                    }
+			//                                                    else
+			//                                                    {
+			//                                                        Thread.Sleep(sleep);
+			//                                                    }
+			//                                                }
+			//                                            }, source);
 
 
-			//}, source);
+			ThreadPool.QueueUserWorkItem(state =>
+			{
+				var enumerable = (IEnumerable<T>)state;
+				var currentElement = 0;
+				foreach (var element in enumerable)
+				{
+					var dumb = element;
+					Deployment.Current.Dispatcher.BeginInvoke(() => destination.Add(dumb));
+					currentElement++;
+
+					if (sleepAfter > 0)
+					{
+						if (currentElement % sleepAfter == 0)
+							Thread.Sleep(sleep);
+					}
+					else
+					{
+						Thread.Sleep(sleep);
+					}
+				}
+
+
+			}, source);
 		}
 	}
 
