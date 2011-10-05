@@ -103,6 +103,7 @@
     <Compile Include="Mvvm\PageExtenders\ICacheableViewModel.cs" />
     <Compile Include="Mvvm\PageExtenders\ICollectionViewModel.cs" />
     <Compile Include="Mvvm\Pages\PageCommon.cs" />
+    <Compile Include="Mvvm\Pages\PageCommonNavigationEventArgs.cs" />
     <Compile Include="Mvvm\Pages\TwoWayDelegate.cs" />
     <Compile Include="Mvvm\ViewModels\CallbackViewModel.cs" />
     <Compile Include="Mvvm\ViewModels\DataViewModel.cs" />

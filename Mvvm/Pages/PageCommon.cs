@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Navigation;
@@ -27,6 +28,20 @@ namespace Where.Common.Mvvm
 		private bool _pageActive;
 
 		protected bool AttachDataCalled { get; private set; }
+
+		private string _pageNameCache;
+		public string PageName
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(_pageNameCache))
+				{
+					_pageNameCache = string.Format("{0}_{1}", GetType().Name, Environment.TickCount);
+				}
+
+				return _pageNameCache;
+			}
+		}
 
 		public PageCommon()
 		{
@@ -64,6 +79,13 @@ namespace Where.Common.Mvvm
 			}
 		}
 
+		private readonly IDictionary<string, string> processQueriedString = new Dictionary<string, string>();
+
+		/// <summary>
+		/// Called when a page becomes the active page in a frame.
+		/// </summary>
+		/// <param name="e">An object that contains the event data.</param>
+		[Obsolete("Deprecated. Use page PageOnNavigatedTo")]
 		protected override void OnNavigatedTo(NavigationEventArgs e)
 		{
 			base.OnNavigatedTo(e);
@@ -80,7 +102,7 @@ namespace Where.Common.Mvvm
 						if (includesPreviousState && !_pageActive)
 						{
 							_isTombstone = true;
-							PageViewModel.LoadFromTombstone(this);
+							RestoreFromTombstone();
 							this.RemoveAllKeysFromPage();
 						}
 						break;
@@ -92,7 +114,7 @@ namespace Where.Common.Mvvm
 						break;
 					case CurrentAppState.ResumingNotPreserved:
 						_isTombstone = true;
-						PageViewModel.LoadFromTombstone(this);
+						RestoreFromTombstone();
 						Application.Current.SetCurrentAppState(CurrentAppState.None);
 						this.RemoveAllKeysFromPage();
 						break;
@@ -103,10 +125,24 @@ namespace Where.Common.Mvvm
 			else
 				Application.Current.SetCurrentAppState(CurrentAppState.None);
 
-			_pageActive = true;
+			if (!_pageActive)
+			{
+				foreach (var mystr in NavigationContext.QueryString)
+				{
+					processQueriedString.Add(mystr);
+				}
+			}
 
+			PageOnNavigatedTo(new PageCommonNavigationEventArgs(_pageActive, processQueriedString, _isTombstone, e.Content, e.Uri));
+
+			_pageActive = true;
 			GC.Collect();
 
+		}
+
+		protected virtual void PageOnNavigatedTo(PageCommonNavigationEventArgs args)
+		{
+			Debug.WriteLine("Calling on navigated to...!");
 		}
 
 		private NavigationMode _currentPageNavigationMode = NavigationMode.Refresh;
@@ -124,7 +160,7 @@ namespace Where.Common.Mvvm
 			if (PageViewModel != null)
 			{
 				if (_currentPageNavigationMode == NavigationMode.New)
-					PageViewModel.SaveToTombstone(this);
+					SaveToTombstone();
 
 				if (_currentPageNavigationMode == NavigationMode.Back)
 				{
@@ -135,6 +171,22 @@ namespace Where.Common.Mvvm
 
 				}
 			}
+		}
+
+
+		private void SaveToTombstone()
+		{
+			State.SetValueInDictionary(TombstoneHelpers.PageNameTombstoneKey, PageName);
+			PageViewModel.SaveToTombstone(this);
+		}
+
+		private void RestoreFromTombstone()
+		{
+			var result = State.GetValueFromDictionary(TombstoneHelpers.PageNameTombstoneKey, PageName);
+
+			if (result != PageName)
+				PageViewModel.LoadFromTombstone(this);
+
 		}
 
 		~PageCommon()

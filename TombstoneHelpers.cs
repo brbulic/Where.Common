@@ -7,6 +7,7 @@ using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using Newtonsoft.Json;
 using Where.Common.Diagnostics;
+using Where.Common.Mvvm;
 
 namespace Where
 {
@@ -15,6 +16,9 @@ namespace Where
 	/// </summary>
 	public static class TombstoneHelpers
 	{
+
+		internal const string PageNameTombstoneKey = "CurrentPageNameTombstoneKey";
+
 		static TombstoneHelpers()
 		{
 			Deployment.Current.Dispatcher.BeginInvoke(() =>
@@ -186,6 +190,7 @@ namespace Where
 		/// <param name="value">Value of the object</param>
 		public static void SaveObjectToApplicationState(this PhoneApplicationPage page, string pageKey, object value)
 		{
+
 			var key = GenerateKeyFromPageAndKey(page, pageKey);
 			var getDataClass = GetDataClassForKey(key);
 
@@ -240,10 +245,9 @@ namespace Where
 		/// <param name="page"></param>
 		public static void RemoveAllKeysFromPage(this PhoneApplicationPage page)
 		{
-			var pageName = page.GetType().Name;
-			var pageNamePrefix = string.Format("{0}_", pageName);
+			var pageNamePrefix = GetPageName(page);
 
-			Debug.WriteLine("Cleaning up keys for page \"{0}\"", page.GetType().Name);
+			Debug.WriteLine("Cleaning up keys for page \"{0}\"", pageNamePrefix);
 
 			var list = SavedObjects.Where(tombstoneDataClass => tombstoneDataClass.Key.StartsWith(pageNamePrefix)).ToList();
 			foreach (var tombstoneDataClass in list)
@@ -256,15 +260,6 @@ namespace Where
 			{
 				CurrentStateDictionary.Remove(keyValuePair);
 			}
-		}
-
-		public static bool ContainsStateElementsForPage(this PhoneApplicationPage page)
-		{
-			var pageNameWithPrefix = page.GetType().Name + "_";
-			var hasAny = SavedObjects.Any(value => value.Key.StartsWith(pageNameWithPrefix));
-			var hasAnyState = CurrentStateDictionary.Any(kvp => kvp.Key.StartsWith(pageNameWithPrefix));
-
-			return hasAny || hasAnyState;
 		}
 
 		public static T RestoreObjectFromApplicationState<T>(this PhoneApplicationPage page, string pageKey, T defaultValue = default(T))
@@ -303,7 +298,16 @@ namespace Where
 			}
 
 			return output;
+		}
 
+
+		public static bool ContainsStateElementsForPage(this PhoneApplicationPage page)
+		{
+			var pageNameWithPrefix = GetPageName(page) + "_";
+			var hasAny = SavedObjects.Any(value => value.Key.StartsWith(pageNameWithPrefix));
+			var hasAnyState = CurrentStateDictionary.Any(kvp => kvp.Key.StartsWith(pageNameWithPrefix));
+
+			return hasAny || hasAnyState;
 		}
 
 		/// <summary>
@@ -314,9 +318,8 @@ namespace Where
 		/// <returns></returns>
 		private static string GenerateKeyFromPageAndKey(PhoneApplicationPage page, string key)
 		{
-			var name = page.GetType().Name;
+			var name = GetPageName(page);
 			return string.Format("{0}_{1}", name, key);
-
 		}
 
 		public static bool StateExists(this PhoneApplicationPage page, string key)
@@ -337,7 +340,28 @@ namespace Where
 				result = false;
 
 			return result;
+		}
 
+		/// <summary>
+		/// Retrieve a page name from page. If PageCommon, uses the PageName property, otherwise uses GetType().Name property.
+		/// </summary>
+		/// <param name="page">Reference to a PhoneApplicationPage</param>
+		/// <returns></returns>
+		private static string GetPageName(PhoneApplicationPage page)
+		{
+			string name;
+
+			if (page is PageCommon)
+			{
+				var getValue = page.State.GetValueFromDictionary(PageNameTombstoneKey) as string;
+				name = getValue ?? ((PageCommon)page).PageName;
+			}
+			else
+			{
+				name = page.GetType().Name;
+			}
+
+			return name;
 		}
 
 		private static StateRestoreData<T> RestoreFromStateDirectly<T>(string key)
