@@ -96,20 +96,38 @@ namespace Where.Common
 		{
 			var contains = true;
 
-			if (!Contains(item))
-				contains = false;
-			else if (_checkEquals != null)
+			T realItem = default(T);
+
+			// First check with custom
+			if (_checkEquals != null)
 			{
-				if (!_backingList.Any(containedItem => _checkEquals(containedItem, item)))
-					contains = false;
+				contains = this.Any(collectionItem => _checkEquals(item, collectionItem));
+				realItem = this.FirstOrDefault(cItem => _checkEquals(item, cItem));
 			}
+
+			if (!contains)
+			{
+				contains = this.Any(collectionItem => EqualityComparer<T>.Default.Equals(collectionItem, item));
+				realItem = this.FirstOrDefault(cItem => _checkEquals(item, cItem));
+			}
+
+			if (!contains)
+			{
+				contains = Contains(item);
+				realItem = this.FirstOrDefault(cItem => _checkEquals(item, cItem));
+			}
+
 
 			if (!contains)
 				return false;
 
+			if (!EqualityComparer<T>.Default.Equals(realItem, default(T)))
+			{
+				Remove(realItem);
+				return true;
+			}
 
-			Remove(item);
-			return true;
+			return false;
 		}
 
 		/// <summary>
@@ -125,7 +143,7 @@ namespace Where.Common
 			_recalculateHashesAndEquals = true;
 			Deployment.Current.Dispatcher.BeginInvoke(() => OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset)));
 			IsSorted = true;
-			
+
 		}
 
 		public IEnumerable<T> ReturnInnerCollection()
@@ -165,7 +183,7 @@ namespace Where.Common
 
 
 		private int _hashCodeCache;
-		
+
 		public override int GetHashCode()
 		{
 			if (_recalculateHashesAndEquals)

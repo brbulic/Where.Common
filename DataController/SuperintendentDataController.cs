@@ -74,6 +74,24 @@ namespace Where.Common.DataController
 
 		private void OnSomePropertyChanged(object sender, PropertyChangedEventArgs e)
 		{
+
+			var getProperty = SuperintendendentBase<T>.GetPropertyType(e.PropertyName);
+
+			var attrib = getProperty.GetCustomAttributes(false);
+
+			foreach (var o in attrib)
+			{
+				if (o is SerializableSharedDataAttribute)
+				{
+					var attr = o as SerializableSharedDataAttribute;
+					if (attr.IgnoreSerialization)
+					{
+						Debug.WriteLine("This should be ignored... {0}", e.PropertyName);
+						return;
+					}
+				}
+			}
+
 			StoreCachedValue(e.PropertyName);
 		}
 

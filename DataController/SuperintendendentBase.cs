@@ -148,6 +148,13 @@ namespace Where.Common.DataController
 					throw new ArgumentOutOfRangeException("type", String.Format("Property \"{0}\" is requested for a wrong type.", propertyName));
 		}
 
+		public static PropertyInfo GetPropertyInfoForName(string propertyName)
+		{
+			ContainsPropertyOfType(GetPropertyType(propertyName), propertyName);
+			var info = TypeProperties.First(prop => prop.Name.Equals(propertyName));
+			return info;
+		}
+
 		public static Type GetPropertyType(string propertyName)
 		{
 			var foundProp = TypeProperties.Where(property => property.Name.Equals(propertyName)).First();

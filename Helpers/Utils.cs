@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Phone.Info;
 using Where.Common.Logger;
+using Where.Common.Messaging;
 using Where.Common.Services;
 using Where.Common.Services.Interfaces;
 
@@ -30,6 +31,11 @@ namespace Where
 			{
 				return BuilderHandle;
 			}
+		}
+
+		public static IMessenger DefaultMessenger
+		{
+			get { return Messenger.Default; }
 		}
 
 		public static string StringArrayToString(string separator, IList<string> array)

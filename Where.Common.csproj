@@ -100,6 +100,7 @@
     <Compile Include="DataController\Interfaces\ISuperintendent.cs" />
     <Compile Include="DataController\SuperintendendentBase.cs" />
     <Compile Include="DataController\SuperintendentDataController.cs" />
+    <Compile Include="Mvvm\Commando\ManualDelegateCommand.cs" />
     <Compile Include="Mvvm\PageExtenders\ICacheableViewModel.cs" />
     <Compile Include="Mvvm\PageExtenders\ICollectionViewModel.cs" />
     <Compile Include="Mvvm\Pages\PageCommon.cs" />
