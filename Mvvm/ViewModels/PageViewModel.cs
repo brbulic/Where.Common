@@ -22,10 +22,27 @@ namespace Where.Common.Mvvm
 			}
 		}
 
+		private volatile bool _useChainloading;
+
+		/// <summary>
+		/// Use this property modify the behaviour of IsLoading. 
+		/// When not using Chain Loading, setting IsLoading will immediately change the IsLoading Property. 
+		/// If it's being used, IsLoading will use an internal count to chain loadings. 
+		/// Set to true to increase the chain, and false to decrease the chain.
+		/// </summary>
+		public bool EnableChainloading
+		{
+			get { return _useChainloading; }
+			set { _useChainloading = value; }
+		}
+
+
 		protected PageViewModel()
 		{
 			PageTitle = "some page title";
 		}
+
+		private int _threadPageCounter;
 
 		private bool _isLoading;
 		/// <summary>
@@ -36,7 +53,23 @@ namespace Where.Common.Mvvm
 			get { return _isLoading; }
 			set
 			{
-				_isLoading = value;
+				if (_useChainloading)
+				{
+					if (value)
+						_threadPageCounter++;
+					else
+						_threadPageCounter--;
+
+					if (_threadPageCounter < 0)
+						_threadPageCounter = 0;
+
+					_isLoading = _threadPageCounter > 0;
+				}
+				else
+				{
+					_isLoading = value;
+				}
+
 				OnPropertyChanged("IsLoading");
 			}
 		}
