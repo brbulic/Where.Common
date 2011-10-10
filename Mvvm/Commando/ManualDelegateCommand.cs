@@ -20,6 +20,9 @@ namespace Where.Common.Mvvm.Commando
 
 		public bool CanExecute(object parameter)
 		{
+			if (parameter == null)
+				return true;
+
 			Utils.IsValueValid(parameter is ICommandoInterface, "Objects must be an ICommandoInterface");
 
 			if (_executorAvailability != null)
@@ -31,6 +34,12 @@ namespace Where.Common.Mvvm.Commando
 
 		public void Execute(object parameter)
 		{
+			if (parameter == null)
+			{
+				_executor(null);
+				return;
+			}
+
 			Utils.IsValueValid(parameter is ICommandoInterface, "Objects must be an ICommandoInterface");
 
 			if (CanExecute(parameter))
