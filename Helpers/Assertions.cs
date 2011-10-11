@@ -1,6 +1,8 @@
 ﻿using System;
 #if DEBUG
 using System.Diagnostics;
+using Where.Common.Diagnostics;
+
 #else
 using Where.Common;
 #endif
@@ -26,7 +28,7 @@ namespace Where
 		{
 
 #if DEBUG
-			Debug.Assert(argument != null, string.Format("{0} {1}", ArgumentNullMessage, reason));
+			WhereDebug.Assert(argument != null, string.Format("{0} {1}", ArgumentNullMessage, reason));
 #else
 
 			if (argument == null)
@@ -42,7 +44,7 @@ namespace Where
 		public static void NotNullValue(object argument, string reason = null)
 		{
 #if DEBUG
-			Debug.Assert(argument != null, reason ?? ArgumentNullMessage);
+			WhereDebug.Assert(argument != null, reason ?? ArgumentNullMessage);
 #else
 			if (argument == null)
 				throw new NullReferenceException(ArgumentNullMessage, new WhereException(ArgumentNullMessage, reason));
@@ -70,7 +72,7 @@ namespace Where
 		public static void IsValueValid(bool condition, string reason = null)
 		{
 #if DEBUG
-			Debug.Assert(condition, ArgumentOutOfRangeMessage);
+			WhereDebug.Assert(condition, ArgumentOutOfRangeMessage);
 #else
 			if (!condition)
 				throw new InvalidOperationException(ArgumentOutOfRangeMessage, new WhereException(ArgumentOutOfRangeMessage, reason));
@@ -85,24 +87,17 @@ namespace Where
 		public static void StringNotNullOrEmpty(string argumentValue, string reason = null)
 		{
 #if DEBUG
-			Debug.Assert(!string.IsNullOrEmpty(argumentValue), StringNullOrEmptyMessage);
+			WhereDebug.Assert(!string.IsNullOrEmpty(argumentValue), reason);
 #else
 			if (string.IsNullOrEmpty(argumentValue))
 				throw new ArgumentNullException("argumentValue", new WhereException(StringNullOrEmptyMessage, reason));
 #endif
 		}
 
-
-#if DEBUG
-
+		[Conditional("DEBUG")]
 		public static void ThrowBreakpointForPredicate(bool predicate)
 		{
 			Debug.Assert(!predicate);
 		}
-
-#endif
-
-
-
 	}
 }

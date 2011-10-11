@@ -1,13 +1,4 @@
 ﻿using System;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
 namespace Where.Common
 {
@@ -18,7 +9,7 @@ namespace Where.Common
 
 
 		public WhereException(string message, string why)
-			: base(message)
+			: base(string.Format("{0}! Beacuse of: {1}", message, why))
 		{
 			_why = why;
 		}

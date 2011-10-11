@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using System.Threading;
 using System.Diagnostics;
 using Microsoft.Phone.Info;
@@ -78,6 +77,22 @@ namespace Where.Common.Diagnostics
 														});
 
 			return result;
+		}
+
+		public static void Assert(bool conditionMustBeTrue, string message = null)
+		{
+
+#if DEBUG
+			if (!conditionMustBeTrue)
+				throw new WhereException("Assertion failed for " + message, message);
+#else
+			Debug.Assert(conditionMustBeTrue,message);
+#endif
+		}
+
+		public static void Assert<T>(Predicate<T> predicate, T value, string message = null)
+		{
+			Assert(predicate(value), message);
 		}
 	}
 }
