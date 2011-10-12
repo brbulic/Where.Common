@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Api\ApiBase.cs" />
+    <Compile Include="Controls\IListMenuItem.cs" />
     <Compile Include="Controls\PerformanceBarBase\PerformanceProgressBar.cs" />
     <Compile Include="Controls\PerformanceBarBase\RelativeAnimatingContentControl.cs" />
     <Compile Include="Controls\ProfileButton.cs" />
