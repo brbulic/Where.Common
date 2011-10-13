@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Where.Common.Diagnostics;
 
 #else
+using System.Diagnostics;
 using Where.Common;
 #endif
 
