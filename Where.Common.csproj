@@ -114,6 +114,7 @@
     <Compile Include="Mvvm\ViewModels\ViewModelBase.cs" />
     <Compile Include="PlatformInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReadOnlyCollection.cs" />
     <Compile Include="Services\BackgroundDispatcher.cs" />
     <Compile Include="Services\CacheService.cs" />
     <Compile Include="Services\ConcurrentRequestWebService.cs" />
