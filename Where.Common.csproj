@@ -62,6 +62,7 @@
     <Compile Include="DataController\Interfaces\ISuperintendentDataContainer.cs" />
     <Compile Include="DataController\Interfaces\ISuperintendentDataCore.cs" />
     <Compile Include="DataController\InternalObjectPoolKey.cs" />
+    <Compile Include="DataController\SuperintendentDataControllerJson.cs" />
     <Compile Include="Helpers\ApiHelpers.cs" />
     <Compile Include="Api\ApiResult.cs" />
     <Compile Include="BindableFavoritesCollection.cs" />
@@ -99,8 +100,8 @@
     <Compile Include="Mvvm\AppState.cs" />
     <Compile Include="DataController\Helpers.cs" />
     <Compile Include="DataController\Interfaces\ISuperintendent.cs" />
-    <Compile Include="DataController\SuperintendendentBase.cs" />
-    <Compile Include="DataController\SuperintendentDataController.cs" />
+    <Compile Include="DataController\SuperintendentBase.cs" />
+    <Compile Include="DataController\SuperintendentDataControllerBasic.cs" />
     <Compile Include="Mvvm\Commando\ManualDelegateCommand.cs" />
     <Compile Include="Mvvm\PageExtenders\ICacheableViewModel.cs" />
     <Compile Include="Mvvm\PageExtenders\ICollectionViewModel.cs" />

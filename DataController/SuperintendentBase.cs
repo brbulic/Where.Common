@@ -8,7 +8,7 @@ using Where.Common.DataController.Interfaces;
 
 namespace Where.Common.DataController
 {
-	public class SuperintendendentBase<TData> : ISuperintendent where TData : class, ISuperintendentDataContainer
+	public class SuperintendentBase<TData> : ISuperintendent where TData : class, ISuperintendentDataContainer
 	{
 		private static readonly PropertyInfo[] TypeProperties = typeof(TData).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
@@ -18,7 +18,7 @@ namespace Where.Common.DataController
 
 		private readonly IDictionary<string, object> _messengerTokens = new Dictionary<string, object>();
 
-		protected SuperintendendentBase(ISuperintendentDataCore<TData> coreInjector, IMessenger messengerInjector)
+		protected SuperintendentBase(ISuperintendentDataCore<TData> coreInjector, IMessenger messengerInjector)
 		{
 			_privateDataCore = coreInjector;
 			_messengerInstance = messengerInjector;

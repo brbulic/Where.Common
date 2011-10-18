@@ -48,7 +48,7 @@ namespace Where.Common.DataController
 
 		public T Value { get; internal set; }
 
-		internal SuperindententDataObject(SuperintendentStatus status, T value, string internalObjectPoolString)
+		public SuperindententDataObject(SuperintendentStatus status, T value, string internalObjectPoolString)
 		{
 			CurrentObjectStatus = status;
 			Value = value;

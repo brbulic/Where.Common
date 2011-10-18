@@ -7,150 +7,155 @@ using System.Collections.Specialized;
 
 namespace Where.Common
 {
-    public class OrderedCollection<T> : ICollection<T>, INotifyCollectionChanged
-    {
-        private const int MaxElements = 10;
+	public class OrderedCollection<T> : ICollection<T>, INotifyCollectionChanged
+	{
+		private const int MaxElements = 10;
 
-        private readonly int _currentMaxElements;
+		private readonly int _currentMaxElements;
 
-        private readonly ObservableCollection<DataContainer> _backgingList = new ObservableCollection<DataContainer>();
+		private readonly ObservableCollection<DataContainer> _backgingList = new ObservableCollection<DataContainer>();
 
-        private ReadOnlyEnumerable<T> _myTempEnumerable;
+		private ReadOnlyEnumerable<T> _myTempEnumerable;
 
-        public OrderedCollection()
-        {
-            _backgingList.CollectionChanged += BackgingListCollectionChanged;
-            _currentMaxElements = MaxElements;
-        }
+		public OrderedCollection()
+		{
+			AttachObservableToEvent(_backgingList, BackgingListCollectionChanged);
+			_currentMaxElements = MaxElements;
+		}
 
-        public OrderedCollection(int maxElements)
-        {
-            _backgingList.CollectionChanged += BackgingListCollectionChanged;
-            _currentMaxElements = maxElements;
-        }
+		public OrderedCollection(int maxElements)
+			: this()
+		{
+			_currentMaxElements = maxElements;
+		}
 
-        void BackgingListCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (CollectionChanged != null)
-            {
-                CollectionChanged(this, e);
-            }
-        }
+		private static void AttachObservableToEvent(INotifyCollectionChanged source, NotifyCollectionChangedEventHandler handler)
+		{
+			source.CollectionChanged += handler;
+		}
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return _myTempEnumerable.GetEnumerator();
-        }
+		void BackgingListCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			if (CollectionChanged != null)
+			{
+				CollectionChanged(this, e);
+			}
+		}
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+		public IEnumerator<T> GetEnumerator()
+		{
+			return _myTempEnumerable.GetEnumerator();
+		}
 
-        public void Add(T item)
-        {
-            var itemLocal = item;
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
 
-            var contains = _backgingList.FirstOrDefault(element => element.Data.Equals(itemLocal));
+		public void Add(T item)
+		{
+			var itemLocal = item;
 
-            if (EqualityComparer<DataContainer>.Default.Equals(contains, default(DataContainer)))
-            {
-                if (_backgingList.Count == _currentMaxElements)
-                {
-                    Remove(_backgingList[_backgingList.Count - 1].Data); // 5+ out of 5 :)
-                }
+			var contains = _backgingList.FirstOrDefault(element => element.Data.Equals(itemLocal));
 
-                _backgingList.Add(new DataContainer(1, itemLocal));
-            }
-            else
-            {
-                contains.IncreaseCount();
-            }
+			if (EqualityComparer<DataContainer>.Default.Equals(contains, default(DataContainer)))
+			{
+				if (_backgingList.Count == _currentMaxElements)
+				{
+					Remove(_backgingList[_backgingList.Count - 1].Data); // 5+ out of 5 :)
+				}
 
-            var orderedCollection = _backgingList.OrderByDescending(elem => elem.Counter, Comparer<int>.Default).Select(elem => elem.Data);
-            _myTempEnumerable = new ReadOnlyEnumerable<T>(orderedCollection);
+				_backgingList.Add(new DataContainer(1, itemLocal));
+			}
+			else
+			{
+				contains.IncreaseCount();
+			}
 
-        }
+			var orderedCollection = _backgingList.OrderByDescending(elem => elem.Counter, Comparer<int>.Default).Select(elem => elem.Data);
+			_myTempEnumerable = new ReadOnlyEnumerable<T>(orderedCollection);
 
-        public void Clear()
-        {
-            _backgingList.Clear();
-            _myTempEnumerable = new ReadOnlyEnumerable<T>(_backgingList.Select(item => item.Data));
-        }
+		}
 
-        public bool Contains(T item)
-        {
-            return _backgingList.Any(elem => elem.Data.Equals(item));
-        }
+		public void Clear()
+		{
+			_backgingList.Clear();
+			_myTempEnumerable = new ReadOnlyEnumerable<T>(_backgingList.Select(item => item.Data));
+		}
 
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            throw new NotImplementedException();
-        }
+		public bool Contains(T item)
+		{
+			return _backgingList.Any(elem => elem.Data.Equals(item));
+		}
 
-        public bool Remove(T item)
-        {
-            var elem = _backgingList.FirstOrDefault(element => element.Data.Equals(item));
+		public void CopyTo(T[] array, int arrayIndex)
+		{
+			throw new NotSupportedException();
+		}
 
-            bool result;
+		public bool Remove(T item)
+		{
+			var elem = _backgingList.FirstOrDefault(element => element.Data.Equals(item));
 
-            if (!EqualityComparer<DataContainer>.Default.Equals(elem, default(DataContainer)))
-            {
-                _backgingList.Remove(elem);
-                _myTempEnumerable = new ReadOnlyEnumerable<T>(_backgingList.Select(element => element.Data));
-                result = true;
-            }
-            else
-            {
-                result = false;
-            }
+			bool result;
 
-            return result;
-        }
+			if (!EqualityComparer<DataContainer>.Default.Equals(elem, default(DataContainer)))
+			{
+				_backgingList.Remove(elem);
+				_myTempEnumerable = new ReadOnlyEnumerable<T>(_backgingList.Select(element => element.Data));
+				result = true;
+			}
+			else
+			{
+				result = false;
+			}
 
-        public int Count
-        {
-            get { return _backgingList.Count; }
-        }
+			return result;
+		}
 
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+		public int Count
+		{
+			get { return _backgingList.Count; }
+		}
 
-        private class DataContainer
-        {
-            private int _counter;
-            private readonly T _data;
+		public bool IsReadOnly
+		{
+			get { return false; }
+		}
 
-            public DataContainer(int counter, T data)
-            {
-                _counter = counter;
-                _data = data;
-            }
+		private class DataContainer
+		{
+			private int _counter;
+			private readonly T _data;
 
-            public T Data
-            {
-                get { return _data; }
-            }
+			public DataContainer(int counter, T data)
+			{
+				_counter = counter;
+				_data = data;
+			}
 
-            public static DataContainer CreateDefault()
-            {
-                return new DataContainer(1, default(T));
-            }
+			public T Data
+			{
+				get { return _data; }
+			}
 
-            public void IncreaseCount()
-            {
-                _counter++;
-            }
+			public static DataContainer CreateDefault()
+			{
+				return new DataContainer(1, default(T));
+			}
 
-            public int Counter
-            {
-                get { return _counter; }
-                set { _counter = value; }
-            }
-        }
+			public void IncreaseCount()
+			{
+				_counter++;
+			}
 
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-    }
+			public int Counter
+			{
+				get { return _counter; }
+				set { _counter = value; }
+			}
+		}
+
+		public event NotifyCollectionChangedEventHandler CollectionChanged;
+	}
 }
