@@ -62,10 +62,10 @@ namespace Where.Common
 			{
 				if (_backgingList.Count == _currentMaxElements)
 				{
-                    //Remove(_backgingList[_backgingList.Count - 1].Data); // 5+ out of 5 :)
+					//Remove(_backgingList[_backgingList.Count - 1].Data); // 5+ out of 5 :)
 
-                    var getLastElement = _myTempEnumerable.Last();
-                    Remove(getLastElement);
+					var getLastElement = _myTempEnumerable.Last();
+					Remove(getLastElement);
 				}
 
 				_backgingList.Add(new DataContainer(1, itemLocal));
@@ -126,12 +126,12 @@ namespace Where.Common
 			get { return false; }
 		}
 
-        public ObservableCollection<DataContainer> GetBackgingCollection_CHAMPION()
-        {
-            return _backgingList;
-        }
-        
-        public class DataContainer
+		public ObservableCollection<DataContainer> GetBackgingCollection_CHAMPION()
+		{
+			return _backgingList;
+		}
+
+		public class DataContainer
 		{
 			private int _counter;
 			private readonly T _data;
