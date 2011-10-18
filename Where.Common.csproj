@@ -112,6 +112,7 @@
     <Compile Include="Mvvm\ViewModels\MessagePageViewModel.cs" />
     <Compile Include="Mvvm\ViewModels\PageViewModel.cs" />
     <Compile Include="Mvvm\ViewModels\ViewModelBase.cs" />
+    <Compile Include="OrderedCollection.cs" />
     <Compile Include="PlatformInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadOnlyCollection.cs" />
