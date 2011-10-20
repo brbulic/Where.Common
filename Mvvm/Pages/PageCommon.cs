@@ -51,13 +51,24 @@ namespace Where.Common.Mvvm
 		public PageCommon(PageViewModel myViewModel)
 			: this()
 		{
-			DataContext = _myViewModel = myViewModel;
+			_myViewModel = myViewModel;
+			DataContext = _myViewModel;
 		}
 
 
 		private void PageCommonLayoutUpdated(object sender, EventArgs e)
 		{
 			LayoutUpdated -= PageCommonLayoutUpdated;
+
+			if (PageViewModel != null)
+			{
+				if (!_isTombstone)
+				{
+					PageViewModel.AttachData(TransferObject);
+					AttachDataCalled = true;
+				}
+			}
+
 			PageLayoutUpdated(sender, e);
 		}
 
@@ -69,14 +80,7 @@ namespace Where.Common.Mvvm
 		/// <param name="e"></param>
 		protected virtual void PageLayoutUpdated(object sender, EventArgs e)
 		{
-			if (PageViewModel != null)
-			{
-				if (!_isTombstone)
-				{
-					PageViewModel.AttachData(TransferObject);
-					AttachDataCalled = true;
-				}
-			}
+
 		}
 
 		private readonly IDictionary<string, string> processQueriedString = new Dictionary<string, string>();
@@ -86,7 +90,7 @@ namespace Where.Common.Mvvm
 		/// </summary>
 		/// <param name="e">An object that contains the event data.</param>
 		[Obsolete("Deprecated. Use page PageOnNavigatedTo")]
-		protected override void OnNavigatedTo(NavigationEventArgs e)
+		protected sealed override void OnNavigatedTo(NavigationEventArgs e)
 		{
 			base.OnNavigatedTo(e);
 
