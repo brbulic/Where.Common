@@ -57,6 +57,7 @@
     <Compile Include="Controls\PerformanceBarBase\PerformanceProgressBar.cs" />
     <Compile Include="Controls\PerformanceBarBase\RelativeAnimatingContentControl.cs" />
     <Compile Include="Controls\ProfileButton.cs" />
+    <Compile Include="Controls\StarRating.cs" />
     <Compile Include="Controls\WhereProgressBar.cs" />
     <Compile Include="DataController\Interfaces\IPrivatePoolMember.cs" />
     <Compile Include="DataController\Interfaces\ISuperintendentDataContainer.cs" />
@@ -147,6 +148,16 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Themes\TitleImage.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Themes\appbar.favs.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Themes\appbar.favs-half.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight for Phone\$(TargetFrameworkVersion)\Microsoft.Silverlight.$(TargetFrameworkProfile).Overrides.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\Silverlight for Phone\$(TargetFrameworkVersion)\Microsoft.Silverlight.CSharp.targets" />
