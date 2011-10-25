@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Where.Controls
 {
@@ -13,8 +14,17 @@ namespace Where.Controls
 			set { SetValue(SubtextProperty, value); }
 		}
 
+		public Brush SubtextForeground
+		{
+			get { return (Brush)GetValue(SubtextForegroundProperty); }
+			set { SetValue(SubtextForegroundProperty, value); }
+		}
 
+		// Using a DependencyProperty as the backing store for SubtextForeground.  This enables animation, styling, binding, etc...
+		public static readonly DependencyProperty SubtextForegroundProperty =
+			DependencyProperty.Register("SubtextForeground", typeof(Brush), typeof(ProfileButton), new PropertyMetadata(null));
 
+		
 		public ICommand Command
 		{
 			get { return (ICommand)GetValue(CommandProperty); }

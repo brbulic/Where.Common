@@ -45,6 +45,8 @@ namespace Where.Common.Services
 
 		#region Misc
 
+		private ObjectCacheData _currentlyOperatedData;
+
 		private const string CacheDataFileName = "CacheData.json";
 
 		private DispatcherTimer _timer;
@@ -76,9 +78,15 @@ namespace Where.Common.Services
 
 		private void CleanAndResyncCache(object sender, EventArgs e)
 		{
-			var getObsolete = (from cacheKey in _objectCacheData
-							   where cacheKey.Value.MarkForDeletetion
+
+			IEnumerable<KeyValuePair<string, ObjectCacheData>> getObsolete;
+
+			lock (this)
+			{
+				getObsolete = (from cacheKey in _objectCacheData
+							   where (cacheKey.Value.MarkForDeletetion) && (cacheKey.Value != _currentlyOperatedData)
 							   select cacheKey).ToList();
+			}
 
 			var count = 0;
 			foreach (var keyValuePair in from keyValuePair in getObsolete let win = IsolatedStorageBase.DeleteFile(keyValuePair.Value.JsonFileName) where win select keyValuePair)
@@ -180,73 +188,80 @@ namespace Where.Common.Services
 
 		public T RetrieveFromCache<T>(IWhereCacheable value, T defaultValue = default(T)) where T : class, IWhereCacheable
 		{
-			if (Exists(value))
+			var returnValue = defaultValue;
+
+			if (!Exists(value))
+				return defaultValue;
+
+			var hasInMemory = false;
+			var cacheData = _objectCacheData[value.Key];
+
+			lock (this)
 			{
-				T returnValue = default(T);
-				var hasInMemory = false;
+				_currentlyOperatedData = cacheData;
+			}
 
-				var cacheData = _objectCacheData[value.Key];
-
-				if (_objectMemoryCache.ContainsKey(value.Key))
+			if (_objectMemoryCache.ContainsKey(value.Key))
+			{
+				var cachedValue = _objectMemoryCache[value.Key];
+				if (cachedValue.IsAlive)
 				{
-					var cachedValue = _objectMemoryCache[value.Key];
-					if (cachedValue.IsAlive)
-					{
-						hasInMemory = cachedValue.IsAlive;
+					hasInMemory = cachedValue.IsAlive;
 
-						if (cachedValue.Target is T)
-							returnValue = (T)cachedValue.Target;
-					}
+					if (cachedValue.Target is T)
+						returnValue = (T)cachedValue.Target;
+				}
+			}
+
+			if (!hasInMemory)
+			{
+				if (string.IsNullOrEmpty(cacheData.JsonFileName))
+				{
+					_objectCacheData.Remove(value.Key);
+					return defaultValue;
 				}
 
-				if (!hasInMemory)
+				var jsonString = _cacheIsolatedStorageJsonWriter.LoadFromFile(cacheData.JsonFileName);
+				var deserializiedValue = defaultValue;
+
+				try
 				{
-					if (string.IsNullOrEmpty(cacheData.JsonFileName))
+					if (string.IsNullOrEmpty(jsonString))
 					{
+						// Cache data is invalid, file either doesn't exist or is empty
+						IsolatedStorageBase.DeleteFile(cacheData.JsonFileName);
+						_objectMemoryCache.Remove(value.Key);
 						_objectCacheData.Remove(value.Key);
-						return defaultValue;
 					}
-
-					var jsonString = _cacheIsolatedStorageJsonWriter.LoadFromFile(cacheData.JsonFileName);
-					var deserializiedValue = default(T);
-
-					try
+					else
 					{
-						if (string.IsNullOrEmpty(jsonString))
-						{
-							// Cache data is invalid, file either doesn't exist or is empty
-							IsolatedStorageBase.DeleteFile(cacheData.JsonFileName);
-							_objectMemoryCache.Remove(value.Key);
-							_objectCacheData.Remove(value.Key);
-							return defaultValue;
-						}
-
 						deserializiedValue = JsonConvert.DeserializeObject<T>(jsonString);
 						_objectMemoryCache[value.Key] = new WeakReference<object>(deserializiedValue);
 					}
-					catch (Exception e)
-					{
-						System.Diagnostics.Debug.WriteLine("Error in json cache deserialization! Error:{0}", e.Message);
-						_objectCacheData.Remove(value.Key);
-						_objectMemoryCache.Remove(value.Key);
-						return deserializiedValue;
-					}
-
-					returnValue = deserializiedValue;
+				}
+				catch (Exception e)
+				{
+					System.Diagnostics.Debug.WriteLine("Error in json cache deserialization! Error:{0}", e.Message);
+					_objectCacheData.Remove(value.Key);
+					_objectMemoryCache.Remove(value.Key);
 				}
 
-				/* Debug data */
-				WhereDebug.WriteLine(string.Format("Cache hit for key: {0}, ObjectType: {1}, LastAccess {2:f}. From json? {3}", value.Key, value.GetType().Name, _objectCacheData[value.Key].LastAccess, !hasInMemory));
-
-				_objectCacheData[value.Key].CacheHit++;
-				_objectCacheData[value.Key].LastAccess = DateTime.Now;
-
-
-				return returnValue;
-
+				returnValue = deserializiedValue;
 			}
 
-			return defaultValue;
+			/* Debug data */
+			WhereDebug.WriteLine(string.Format("Cache hit for key: {0}, ObjectType: {1}, LastAccess {2:f}. From json? {3}", value.Key, value.GetType().Name, _objectCacheData[value.Key].LastAccess, !hasInMemory));
+
+			_objectCacheData[value.Key].CacheHit++;
+			_objectCacheData[value.Key].LastAccess = DateTime.Now;
+
+			lock (this)
+			{
+				_currentlyOperatedData = null;
+			}
+
+
+			return returnValue;
 		}
 
 		/// <summary>

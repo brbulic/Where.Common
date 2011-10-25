@@ -38,6 +38,7 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="FontFamily" Value="Segoe WP Light"/>
         <Setter Property="FontSize" Value="{StaticResource PhoneFontSizeExtraLarge}"/>
+        <Setter Property="SubtextForeground" Value="{StaticResource WhereTitleBrush}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Controls:ProfileButton">
@@ -51,7 +52,7 @@
                                               VerticalAlignment="{TemplateBinding VerticalAlignment}"
                                               Content="{TemplateBinding Content}"/>
                         <Grid Grid.Row="1" HorizontalAlignment="Left">
-                            <TextBlock Text="{TemplateBinding Subtext}" Style="{StaticResource PhoneTextNormalStyle}" Foreground="{StaticResource WhereTitleBrush}" />
+                            <TextBlock Text="{TemplateBinding Subtext}" Style="{StaticResource PhoneTextNormalStyle}" Foreground="{TemplateBinding SubtextForeground}" />
                         </Grid>
                     </Grid>
                 </ControlTemplate>

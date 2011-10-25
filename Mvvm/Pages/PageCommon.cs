@@ -59,6 +59,7 @@ namespace Where.Common.Mvvm
 		private void PageCommonLayoutUpdated(object sender, EventArgs e)
 		{
 			LayoutUpdated -= PageCommonLayoutUpdated;
+			PageLayoutUpdated(sender, e);
 
 			if (PageViewModel != null)
 			{
@@ -69,9 +70,8 @@ namespace Where.Common.Mvvm
 				}
 			}
 
-			PageLayoutUpdated(sender, e);
-		}
 
+		}
 
 		/// <summary>
 		/// Override without calling the base method to override the default functionality.
@@ -181,14 +181,16 @@ namespace Where.Common.Mvvm
 		private void SaveToTombstone()
 		{
 			State.SetValueInDictionary(TombstoneHelpers.PageNameTombstoneKey, PageName);
-			PageViewModel.SaveToTombstone(this);
+
+			if (PageViewModel != null)
+				PageViewModel.SaveToTombstone(this);
 		}
 
 		private void RestoreFromTombstone()
 		{
 			var result = State.GetValueFromDictionary(TombstoneHelpers.PageNameTombstoneKey, PageName);
 
-			if (result != PageName)
+			if ((string)result != PageName && PageViewModel != null)
 				PageViewModel.LoadFromTombstone(this);
 
 		}
