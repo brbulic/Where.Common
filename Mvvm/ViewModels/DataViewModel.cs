@@ -36,12 +36,6 @@ namespace Where.Common.Mvvm
 			SaveUserDataToTombstone(page);
 		}
 
-		protected virtual void SaveUserDataToTombstone(PageCommon page)
-		{
-			
-		}
-
-
 		public sealed override void LoadFromTombstone(PageCommon page)
 		{
 			base.LoadFromTombstone(page);
@@ -55,6 +49,19 @@ namespace Where.Common.Mvvm
 
 		}
 
+		/// <summary>
+		/// After the system saves Loaded data automatically, the option is given for the user to save his own particular states.
+		/// </summary>
+		/// <param name="page"></param>
+		protected virtual void SaveUserDataToTombstone(PageCommon page)
+		{
+			
+		}
+		
+		/// <summary>
+		/// After the system restores PageData automatically, the option is given for the user to restore his own particular data.
+		/// </summary>
+		/// <param name="page"></param>
 		protected virtual void LoadUserDataFromTombstone(PageCommon page)
 		{
 			
