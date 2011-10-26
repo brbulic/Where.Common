@@ -191,6 +191,9 @@ namespace Where
 		public static void SaveObjectToApplicationState(this PhoneApplicationPage page, string pageKey, object value)
 		{
 
+			Utils.StringNotNullOrEmpty(pageKey, "A valid tombstone key must exist!");
+			Utils.NotNullArgument(page, "There must be a page to tombstone data to!");
+
 			var key = GenerateKeyFromPageAndKey(page, pageKey);
 			var getDataClass = GetDataClassForKey(key);
 
@@ -223,6 +226,9 @@ namespace Where
 		/// <param name="userKey"></param>
 		public static void RemoveObjectFromApplicationState(this PhoneApplicationPage page, string userKey)
 		{
+			Utils.StringNotNullOrEmpty(userKey, "A valid tombstone key must exist!");
+			Utils.NotNullArgument(page, "There must be a page to tombstone data to!");
+
 			var key = GenerateKeyFromPageAndKey(page, userKey);
 			var dataClass = GetDataClassForKey(key);
 
@@ -264,6 +270,10 @@ namespace Where
 
 		public static T RestoreObjectFromApplicationState<T>(this PhoneApplicationPage page, string pageKey, T defaultValue = default(T))
 		{
+
+			Utils.NotNullArgument(page, "There must a page be exist to Restore data from!");
+			Utils.StringNotNullOrEmpty(pageKey, "A tombstone key must exist for using it to restore data!");
+
 			var key = GenerateKeyFromPageAndKey(page, pageKey);
 			var getDataClass = GetDataClassForKey(key);
 
