@@ -192,7 +192,9 @@ namespace Where
 		{
 
 			Utils.StringNotNullOrEmpty(pageKey, "A valid tombstone key must exist!");
-			Utils.NotNullArgument(page, "There must be a page to tombstone data to!");
+			Utils.NotNullArgument(page, "pageKey", "There must be a page to tombstone data to!");
+			
+			//Utils.NotNullArgument(value, "value", "There must be tombstone data to tombstone!");
 
 			var key = GenerateKeyFromPageAndKey(page, pageKey);
 			var getDataClass = GetDataClassForKey(key);
