@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Where
@@ -21,44 +22,53 @@ namespace Where
 		/// </summary>
 		/// <param name="arguments">Dictionary of arguments</param>
 		/// <param name="ranval">If true, appends the random value to parameters to bypass Browser caching</param>
+		/// <param name="builder"></param>
 		/// <returns>The string containing all parameters.</returns>
-		public static string ProcessArguments(IDictionary<string, string> arguments, bool ranval = true)
+		public static string ProcessArguments(IDictionary<string, string> arguments, bool ranval = true, StringBuilder builder = null)
 		{
-			// Aquire builder 
-			var builderHandle = GetStringBuilderWithHandle;
 
-			var returner = builderHandle.ExecuteSafeOperationOnObject(str =>
-																		{
+			string returner;
 
-																			string result;
-
-																			// Prepare builder
-																			str.Flush();
-																			str.Append("?");
-
-																			if (arguments == null || arguments.Count == 0 && ranval)
-																			{
-																				str.Append("ranval=").Append(Environment.TickCount);
-																				result = str.ToString();
-																			}
-																			else
-																			{
-																				foreach (var keyValuePair in arguments)
-																					str.Append(keyValuePair.Key).Append("=").Append(keyValuePair.Value).Append("&");
-																				if (ranval)
-																					str.Append("ranval=").Append(Environment.TickCount);
-																				else
-																					str.Remove(str.Length - 1, 1);
-
-																				result = str.ToString();
-																			}
-
-																			return result;
-																		});
-
-
+			if (builder == null)
+			{
+				// Aquire builder 
+				var builderHandle = GetStringBuilderWithHandle;
+				returner = builderHandle.ExecuteSafeOperationOnObject(str => RealProcessArguments(arguments, str, ranval));
+			}
+			else
+			{
+				returner = RealProcessArguments(arguments, builder, ranval);
+			}
 
 			return returner;
+		}
+
+		private static string RealProcessArguments(ICollection<KeyValuePair<string, string>> args, StringBuilder builder, bool ranval)
+		{
+			string result;
+
+			// Prepare builder
+			builder.Flush();
+			builder.Append("?");
+
+			if (args == null || args.Count == 0 && ranval)
+			{
+				builder.Append("ranval=").Append(Environment.TickCount);
+				result = builder.ToString();
+			}
+			else
+			{
+				foreach (var keyValuePair in args)
+					builder.Append(keyValuePair.Key).Append("=").Append(keyValuePair.Value).Append("&");
+				if (ranval)
+					builder.Append("ranval=").Append(Environment.TickCount);
+				else
+					builder.Remove(builder.Length - 1, 1);
+
+				result = builder.ToString();
+			}
+
+			return result;
 		}
 
 

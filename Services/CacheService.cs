@@ -206,10 +206,14 @@ namespace Where.Common.Services
 				var cachedValue = _objectMemoryCache[value.Key];
 				if (cachedValue.IsAlive)
 				{
+					var target = cachedValue.Target;
 					hasInMemory = cachedValue.IsAlive;
 
-					if (cachedValue.Target is T)
-						returnValue = (T)cachedValue.Target;
+					if (target is T)
+					{
+						returnValue = (T)target;
+						SignalHitForCacheKey(value);
+					}
 				}
 			}
 
@@ -237,6 +241,7 @@ namespace Where.Common.Services
 					{
 						deserializiedValue = JsonConvert.DeserializeObject<T>(jsonString);
 						_objectMemoryCache[value.Key] = new WeakReference<object>(deserializiedValue);
+						SignalHitForCacheKey(value);
 					}
 				}
 				catch (Exception e)
@@ -252,9 +257,6 @@ namespace Where.Common.Services
 			/* Debug data */
 			WhereDebug.WriteLine(string.Format("Cache hit for key: {0}, ObjectType: {1}, LastAccess {2:f}. From json? {3}", value.Key, value.GetType().Name, _objectCacheData[value.Key].LastAccess, !hasInMemory));
 
-			_objectCacheData[value.Key].CacheHit++;
-			_objectCacheData[value.Key].LastAccess = DateTime.Now;
-
 			lock (this)
 			{
 				_currentlyOperatedData = null;
@@ -262,6 +264,12 @@ namespace Where.Common.Services
 
 
 			return returnValue;
+		}
+
+		private void SignalHitForCacheKey(IWhereCacheable cacheable)
+		{
+			_objectCacheData[cacheable.Key].CacheHit++;
+			_objectCacheData[cacheable.Key].LastAccess = DateTime.Now;
 		}
 
 		/// <summary>

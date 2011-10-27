@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Windows;
 using Where.Api;
 using Where.Common.Diagnostics;
@@ -231,21 +232,26 @@ namespace Where.Common.Services
 			return result;
 		}
 
+		private static string ArgumentsProcessor(IDictionary<string, string> args)
+		{
+			var builder = new StringBuilder();
+			return Utils.ProcessArguments(args, true, builder);
+		}
+
 		protected static PrivateRequestData CreateGetRequestData(string url, WebServiceResult result, IDictionary<string, string> args, object userState = null, bool onUi = false)
 		{
-			return PrivateRequestData.CreateRequest(RequestType.Get, url, Utils.ProcessArguments(args), userState, result, onUi);
+			return PrivateRequestData.CreateRequest(RequestType.Get, url, ArgumentsProcessor(args), userState, result, onUi);
 		}
 
 		protected static PrivateRequestData CreatePostRequestData(string url, WebServiceResult result, IDictionary<string, string> args, object userState = null, bool onUi = false)
 		{
-			return PrivateRequestData.CreateRequest(RequestType.Post, url, Utils.ProcessArguments(args), userState, result, onUi);
+			return PrivateRequestData.CreateRequest(RequestType.Post, url, ArgumentsProcessor(args), userState, result, onUi);
 		}
 
 		protected static PrivateRequestData CreatePostRequestDataFromString(string url, WebServiceResult result, string args, object userState = null, bool onUi = false)
 		{
 			return PrivateRequestData.CreateRequest(RequestType.Post, url, args, userState, result, onUi);
 		}
-
 
 		#endregion
 

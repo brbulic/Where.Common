@@ -59,22 +59,20 @@ namespace Where.Common.Mvvm
 		private void PageCommonLayoutUpdated(object sender, EventArgs e)
 		{
 			LayoutUpdated -= PageCommonLayoutUpdated;
-			PageLayoutUpdated(sender, e);
+			Dispatcher.BeginInvoke(() => PageLayoutUpdated(sender, e));
 
 			if (PageViewModel != null)
 			{
 				if (!_isTombstone)
 				{
-					PageViewModel.AttachData(TransferObject);
+					Dispatcher.BeginInvoke(() => PageViewModel.AttachData(TransferObject));
 					AttachDataCalled = true;
 				}
 			}
-
-
 		}
 
 		/// <summary>
-		/// Override without calling the base method to override the default functionality.
+		/// Use to prepare the ViewModel BEFORE calling AttachData(TransferObject) if using a ViewModel
 		/// </summary>
 		/// <param name="sender"></param>
 		/// <param name="e"></param>
@@ -83,7 +81,7 @@ namespace Where.Common.Mvvm
 
 		}
 
-		private readonly IDictionary<string, string> processQueriedString = new Dictionary<string, string>();
+		private readonly IDictionary<string, string> _processQueriedString = new Dictionary<string, string>();
 
 		/// <summary>
 		/// Called when a page becomes the active page in a frame.
@@ -133,15 +131,13 @@ namespace Where.Common.Mvvm
 			{
 				foreach (var mystr in NavigationContext.QueryString)
 				{
-					processQueriedString.Add(mystr);
+					_processQueriedString.Add(mystr);
 				}
 			}
 
-			PageOnNavigatedTo(new PageCommonNavigationEventArgs(_pageActive, processQueriedString, _isTombstone, e.Content, e.Uri));
+			PageOnNavigatedTo(new PageCommonNavigationEventArgs(_pageActive, _processQueriedString, _isTombstone, e.Content, e.Uri));
 
 			_pageActive = true;
-			GC.Collect();
-
 		}
 
 		protected virtual void PageOnNavigatedTo(PageCommonNavigationEventArgs args)
