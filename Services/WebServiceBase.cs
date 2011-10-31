@@ -88,7 +88,7 @@ namespace Where.Common.Services
 		/// <returns>Guid of the Request</returns>
 		public Guid InitiatePost(string url, WebServiceResult result, IDictionary<string, string> parameters, object userState)
 		{
-			return InitiatePost(url, result, Utils.ProcessArguments(parameters), userState);
+			return InitiatePost(url, result, ArgumentsProcessor(parameters), userState);
 		}
 
 		#endregion
