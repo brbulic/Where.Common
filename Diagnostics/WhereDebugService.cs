@@ -110,11 +110,11 @@ namespace Where.Common.Diagnostics
 
 		private static readonly string Tag = typeof(WhereDebugService).Name;
 
-		private void Callback(bool error, object o)
+		private static void Callback(bool error, object o)
 		{
 			if (!error) return;
 
-			Debug.WriteLine("Error sending debug message! Error:{0}", o);
+			Debug.WriteLine("Error sending debug message! Error: {0}", o is Exception ? ((Exception)o).Message : String.Empty);
 		}
 	}
 }
